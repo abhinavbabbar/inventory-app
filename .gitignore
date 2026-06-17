@@ -1,0 +1,6 @@
+# Claude Code local config/memory — not part of the app
+.claude/
+
+# OS noise
+.DS_Store
+Thumbs.db

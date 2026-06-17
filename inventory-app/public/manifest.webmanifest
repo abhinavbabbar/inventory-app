@@ -1,0 +1,19 @@
+{
+  "name": "Inventory & P&L",
+  "short_name": "Inventory",
+  "description": "Inventory and partnership P&L for India → UAE imports",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fafafa",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

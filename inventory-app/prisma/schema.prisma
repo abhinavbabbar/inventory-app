@@ -1,0 +1,301 @@
+// Prisma schema — Inventory & Partnership P&L
+// Spec reference: SPEC.md §3
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// Auth & roles
+// -----------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   // PARTNER | ADMIN | STAFF
+  permissions  String?  // JSON blob of per-resource overrides (nullable)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  partner        Partner?
+  assignedLeads  Lead[] @relation("LeadAssignee")
+
+  @@index([email])
+}
+
+model Partner {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  // Denormalized equity total = sum(capital investments). Drives ownership share %.
+  // Opex a partner fronts is reimbursable (see OpexEntry.paidByPartnerId) and excluded here.
+  investmentAed Decimal  @default(0)
+  investedAt    DateTime @default(now())
+  notes         String?
+
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  investments PartnerInvestment[]
+  opexEntries OpexEntry[]
+}
+
+// One dated row per capital contribution. The running total is denormalized
+// onto Partner.investmentAed (recomputed in a transaction on every change).
+model PartnerInvestment {
+  id            String   @id @default(cuid())
+  partnerId     String
+  amountAed     Decimal
+  contributedAt DateTime
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  partner Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, contributedAt])
+}
+
+// -----------------------------------------------------------------------------
+// Inventory
+// -----------------------------------------------------------------------------
+
+model Item {
+  id                String   @id @default(cuid())
+  sku               String   @unique
+  name              String
+  category          String?
+  unit              String   @default("pc") // pc, kg, box, etc.
+  reorderThreshold  Int      @default(0)
+  photoUrl          String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  shipmentLines  ShipmentLine[]
+  saleLines      SaleLine[]
+  orderLines     OrderLine[]
+  stockMovements StockMovement[]
+
+  @@index([sku])
+  @@index([category])
+}
+
+// -----------------------------------------------------------------------------
+// Shipments (imports from India)
+// -----------------------------------------------------------------------------
+
+model Shipment {
+  id                       String   @id @default(cuid())
+  reference                String   @unique
+  shippedAt                DateTime
+  arrivedAt                DateTime?
+  fxRateInrToAed           Decimal  // e.g. 0.0445
+  totalShippingInr         Decimal
+  shippingAllocationMethod String   // EQUAL_PER_UNIT | WEIGHTED_BY_VALUE | MANUAL
+  notes                    String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  lines ShipmentLine[]
+
+  @@index([arrivedAt])
+}
+
+model ShipmentLine {
+  id                     String   @id @default(cuid())
+  shipmentId             String
+  itemId                 String
+  quantity               Int
+  unitPurchasePriceInr   Decimal
+  manualShippingInr      Decimal? // only used when allocation method = MANUAL
+  allocatedShippingInr   Decimal  // computed at save
+  landedCostAed          Decimal  // per-unit, computed at save (snapshot)
+
+  shipment       Shipment        @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  item           Item            @relation(fields: [itemId], references: [id])
+  stockMovements StockMovement[]
+
+  @@index([shipmentId])
+  @@index([itemId])
+}
+
+// -----------------------------------------------------------------------------
+// Stock movements (FIFO source of truth)
+// -----------------------------------------------------------------------------
+
+model StockMovement {
+  id             String   @id @default(cuid())
+  itemId         String
+  quantity       Int      // signed: positive in, negative out
+  type           String   // SHIPMENT_IN | SALE_OUT | ADJUSTMENT
+  shipmentLineId String?
+  saleLineId     String?
+  unitCostAed    Decimal  // snapshot at the time of movement
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  item         Item          @relation(fields: [itemId], references: [id])
+  shipmentLine ShipmentLine? @relation(fields: [shipmentLineId], references: [id])
+  saleLine     SaleLine?     @relation(fields: [saleLineId], references: [id])
+
+  @@index([itemId, createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// Customers, Leads, Orders & Sales
+// -----------------------------------------------------------------------------
+
+model Customer {
+  id              String   @id @default(cuid())
+  name            String
+  email           String?
+  mobile          String?
+  deliveryAddress String?
+  notes           String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  sales  Sale[]
+  orders Order[]
+
+  @@index([mobile])
+  @@index([email])
+  @@index([name])
+}
+
+model Lead {
+  id               String   @id @default(cuid())
+  name             String
+  mobile           String?
+  email            String?
+  deliveryAddress  String?
+  notes            String?
+  source           String?  // free-form: referral, walk-in, instagram, etc.
+  status           String   // NEW | CONTACTED | QUALIFIED | CONVERTED | LOST
+  assignedToUserId String?
+  convertedOrderId String?  @unique
+  convertedAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  assignedTo      User?  @relation("LeadAssignee", fields: [assignedToUserId], references: [id])
+  convertedOrder  Order? @relation(fields: [convertedOrderId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([mobile])
+}
+
+model Order {
+  id                  String   @id @default(cuid())
+  orderNumber         String   @unique
+  customerId          String
+  status              String   // IN_PROGRESS | DISPATCHED | CANCELLED
+  orderedAt           DateTime @default(now())
+  expectedDispatchAt  DateTime?
+  dispatchedAt        DateTime?
+  cancelledAt         DateTime?
+  vatRatePct          Decimal  @default(0)
+  vatAmountAed        Decimal  @default(0)
+  advancePct          Decimal  @default(0)
+  advanceAmountAed    Decimal  @default(0)
+  advancePaidAt       DateTime?
+  balanceAmountAed    Decimal  @default(0)
+  balancePaidAt       DateTime?
+  saleId              String?  @unique
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  customer Customer    @relation(fields: [customerId], references: [id])
+  sale     Sale?       @relation(fields: [saleId], references: [id])
+  lines    OrderLine[]
+  leads    Lead[]
+
+  @@index([status, orderedAt])
+  @@index([customerId])
+}
+
+model OrderLine {
+  id               String  @id @default(cuid())
+  orderId          String
+  itemId           String
+  quantity         Int
+  unitSalePriceAed Decimal
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  item  Item  @relation(fields: [itemId], references: [id])
+
+  @@index([orderId])
+  @@index([itemId])
+}
+
+model Sale {
+  id            String   @id @default(cuid())
+  invoiceNumber String   @unique
+  customerId    String?  // nullable: walk-in customers allowed
+  orderId       String?  @unique // set when this Sale came from dispatching an Order
+  soldAt        DateTime @default(now())
+  placeOfSale   String?  // e.g. Store, Exhibition, Online, Pop-up
+  vatRatePct    Decimal  @default(0) // snapshot of VAT rate at sale time
+  vatAmountAed  Decimal  @default(0)
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  customer Customer?  @relation(fields: [customerId], references: [id])
+  order    Order?
+  lines    SaleLine[]
+
+  @@index([soldAt])
+  @@index([customerId])
+}
+
+model SaleLine {
+  id                   String  @id @default(cuid())
+  saleId               String
+  itemId               String
+  quantity             Int
+  unitSalePriceAed     Decimal
+  unitCostAedSnapshot  Decimal // weighted-average FIFO cost at time of sale
+
+  sale           Sale            @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  item           Item            @relation(fields: [itemId], references: [id])
+  stockMovements StockMovement[]
+
+  @@index([saleId])
+  @@index([itemId])
+}
+
+// -----------------------------------------------------------------------------
+// Opex & Settings
+// -----------------------------------------------------------------------------
+
+model OpexEntry {
+  id              String   @id @default(cuid())
+  category        String   // RENT | SALARY | UTILITY | TRANSPORT | MARKETING | OTHER
+  amountAed       Decimal
+  incurredAt      DateTime
+  notes           String?
+  // When a partner fronts this cost, it's a reimbursable amount they advanced (not equity).
+  paidByPartnerId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  paidByPartner Partner? @relation(fields: [paidByPartnerId], references: [id], onDelete: SetNull)
+
+  @@index([incurredAt])
+  @@index([category])
+  @@index([paidByPartnerId])
+}
+
+model Setting {
+  key       String   @id
+  value     String   // JSON-serialized values
+  updatedAt DateTime @updatedAt
+}

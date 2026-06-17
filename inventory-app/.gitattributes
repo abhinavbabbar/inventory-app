@@ -1,0 +1,8 @@
+# Force LF for shell scripts and Docker/Caddy config so they work on the Linux VPS
+# regardless of the editor or git autocrlf setting on Windows.
+*.sh            text eol=lf
+docker-entrypoint.sh text eol=lf
+Caddyfile       text eol=lf
+Dockerfile      text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
