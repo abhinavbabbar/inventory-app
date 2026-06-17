@@ -88,12 +88,22 @@ HTTPS is automatic. NextAuth needs no change — `AUTH_TRUST_HOST=true` handles 
 
 ---
 
-## Everyday workflow
+## Release workflow (preview → promote)
 
-- **Ship changes:** `git push` to the main branch → Vercel auto-builds & deploys. Any new
-  Prisma migrations apply automatically during the build.
-- **Preview deploys:** every PR/branch gets its own preview URL (point it at a separate Neon
-  branch if you want isolated preview data).
+The Vercel **Production Branch** is **`production`**. Day-to-day work happens on `main`:
+
+```
+edit → git push (main) → Vercel Preview URL → test → promote → Production
+```
+
+- **Push to `main`** → builds a **Preview** deployment (own URL, production untouched).
+- **Promote to production** when happy, either:
+  - **Dashboard:** open the preview deployment → **⋯ → Promote to Production** (instant, same build), or
+  - **Merge:** `git checkout production && git merge main && git push` → Vercel builds production
+    from the `production` branch (keeps the branch equal to what's live).
+
+New Prisma migrations apply automatically during whichever build runs.
+
 - **Logs:** Vercel dashboard → your project → **Logs** (runtime) / **Deployments** (build).
 - **Database console / backups:** Neon dashboard → SQL Editor, branching, and point-in-time
   restore are built in.
