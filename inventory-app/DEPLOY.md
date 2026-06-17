@@ -1,16 +1,21 @@
-# Deploying to Serverspace UAE + a custom domain
+# Deploying to Vercel + Neon
 
-This guide takes the app live on a **Serverspace** VPS in the **UAE (Dubai)** region with
-**HTTPS** and your own domain. The stack runs as three Docker containers managed by Docker Compose:
+The app deploys to **Vercel** (hosting) with **Neon** (serverless PostgreSQL). Both have free
+tiers that comfortably cover this workload. Migrations and the admin user are created
+automatically on the first deploy — no server to manage.
 
 ```
-Internet ──▶ Caddy (TLS, ports 80/443) ──▶ app (Next.js :3000) ──▶ db (Postgres)
-                auto Let's Encrypt cert         migrate + seed        in-region volume
+Browser ──▶ Vercel (Next.js, auto HTTPS) ──▶ Neon Postgres (pooled connection)
+                 vercel-build:                      migrations run during build
+                 migrate deploy → seed → next build
 ```
 
-Everything (app + database) stays on **your** UAE server — data never leaves the region.
+Estimated time: ~15 minutes. Cost: $0 to start.
 
-Estimated time: ~30–40 minutes. You need a card for the VPS (~$5–8/mo) and the domain (~$10–15/yr).
+> **Heads-up on data location:** unlike the earlier Serverspace-UAE plan, Neon hosts the
+> database in its own cloud regions. Neon has no Dubai region — pick the **closest** one
+> (e.g. AWS Europe/Frankfurt or Asia/Singapore). If in-UAE data residency is a hard
+> requirement, use the self-host option in the appendix instead.
 
 ---
 
@@ -18,186 +23,100 @@ Estimated time: ~30–40 minutes. You need a card for the VPS (~$5–8/mo) and t
 
 | Step | Who |
 |---|---|
-| Create Serverspace account + VPS | **You** (account + payment) |
-| Register the domain | **You** (account + payment) |
-| Point DNS A record at the server | **You** (paste one record) |
-| Install Docker, copy files, set secrets, launch | Commands below — copy/paste |
-| Build image, run DB migrations, get TLS cert, seed admin | **Automated** on first `docker compose up` |
+| Create Neon project, copy 2 connection strings | **You** |
+| Import the GitHub repo into Vercel, set Root Directory + env vars | **You** (clicks) |
+| `prisma generate`, run migrations, seed admin, build & host | **Automated** each deploy |
 
 ---
 
-## 1. Provision the VPS (Serverspace)
+## 1. Push the code to GitHub
 
-1. Sign up at **https://serverspace.io** and create a new server:
-   - **Location:** United Arab Emirates (Dubai)
-   - **OS:** Ubuntu 24.04 LTS
-   - **Size:** 2 vCPU / 4 GB RAM / 40+ GB SSD is comfortable (1 vCPU / 2 GB works for light use)
-   - Add your SSH key (recommended) or use the root password they email you.
-2. Note the server's **public IPv4 address** — call it `SERVER_IP`.
+If you haven't already, get this repo onto GitHub (see the chat — I can do this with you).
+Vercel deploys from the GitHub repo.
 
-SSH in:
-```bash
-ssh root@SERVER_IP
-```
+## 2. Create the database (Neon)
 
-## 2. Install Docker
+1. Sign up at **https://neon.tech** → **New Project**.
+2. Name it (e.g. `inventory`), choose the **region closest to your users**, Postgres 16.
+3. After it's created, open **Connect** / **Connection Details** and copy **two** strings:
+   - **Pooled** connection (host contains `-pooler`) → this is your `DATABASE_URL`
+   - **Direct** connection (no `-pooler`) → this is your `DIRECT_URL`
 
-```bash
-# Ubuntu 24.04 — official Docker install
-apt-get update -y
-apt-get install -y ca-certificates curl git
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-chmod a+r /etc/apt/keyrings/docker.asc
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" \
-  > /etc/apt/sources.list.d/docker.list
-apt-get update -y
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-docker --version && docker compose version
-```
+   Both end with `?sslmode=require`. Keep them handy for step 3.
 
-## 3. Get the code onto the server
+## 3. Import into Vercel
 
-Pick **one**:
+1. Sign up at **https://vercel.com** with your GitHub account → **Add New… → Project**.
+2. Select this repository.
+3. **Important — Root Directory:** click **Edit** and set it to **`inventory-app`**
+   (the Next.js app lives in that subfolder).
+4. Framework preset auto-detects **Next.js**. Leave the build command as-is — the repo's
+   `vercel-build` script runs migrations + seed + build automatically.
+5. Add **Environment Variables** (Production, and Preview if you want):
 
-**Option A — Git (recommended).** Push this project to a private GitHub repo from your PC, then:
-```bash
-cd /opt
-git clone https://github.com/<you>/<repo>.git inventory-app
-cd inventory-app/inventory-app    # the Next.js app lives in this subfolder
-```
+   | Name | Value |
+   |---|---|
+   | `DATABASE_URL` | Neon **pooled** string (from step 2) |
+   | `DIRECT_URL` | Neon **direct** string (from step 2) |
+   | `AUTH_SECRET` | a fresh 32-byte secret — see below |
+   | `AUTH_TRUST_HOST` | `true` |
+   | `SEED_ADMIN_EMAIL` | `admin@yourcompany.com` |
+   | `SEED_ADMIN_PASSWORD` | a strong password (change it after first login) |
 
-**Option B — Copy directly with scp** (run on your Windows PC, in PowerShell):
-```powershell
-scp -r "C:\Users\Hp\OneDrive\Inventory App\inventory-app" root@SERVER_IP:/opt/inventory-app
-```
-then on the server: `cd /opt/inventory-app`
-
-> The folder you run `docker compose` from must contain `docker-compose.yml`, `Dockerfile`,
-> and `Caddyfile` (that's the `inventory-app` app folder).
-
-## 4. Register your domain + point DNS at the server
-
-1. Register a domain at any registrar (Namecheap, Cloudflare, GoDaddy, etc.).
-2. In the registrar's DNS settings, add these records (replace `SERVER_IP`):
-
-   | Type | Name / Host | Value | TTL |
-   |---|---|---|---|
-   | A | `@` | `SERVER_IP` | Auto / 300 |
-   | A | `www` | `SERVER_IP` | Auto / 300 |
-
-3. Wait for DNS to propagate (usually minutes, up to ~1 hour). Check from the server:
+   Generate `AUTH_SECRET`:
    ```bash
-   apt-get install -y dnsutils
-   dig +short yourdomain.com    # should print SERVER_IP
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
    ```
 
-> TLS will only succeed once `yourdomain.com` resolves to `SERVER_IP`, so do this **before** launch.
+6. Click **Deploy**. The build will: install deps → `prisma generate` (postinstall) →
+   `prisma migrate deploy` (creates all tables) → seed the admin user + default settings →
+   `next build`. Watch the build log; it finishes in ~2–3 min.
 
-## 5. Configure secrets
+## 4. First login & setup
 
-```bash
-cp .env.production.example .env
-nano .env
-```
+1. Open your `*.vercel.app` URL → you'll see the sign-in page.
+2. Log in with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`.
+3. **Settings → Manage users** → change your admin password.
+4. **Settings → Company info / VAT / FX** → fill in your real details.
+5. Add partners and start entering data.
 
-Fill every value. Generate strong secrets:
-```bash
-# AUTH_SECRET
-openssl rand -base64 32
-# POSTGRES_PASSWORD
-openssl rand -base64 24
-```
+## 5. Custom domain (when ready)
 
-Minimum to set: `DOMAIN`, `ACME_EMAIL`, `POSTGRES_PASSWORD`, `AUTH_SECRET`,
-`SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`. Leave `SEED_SAMPLE_DATA=false` for real use.
-
-## 6. Open the firewall (if enabled)
-
-```bash
-# If ufw is active, allow web + SSH:
-ufw allow OpenSSH
-ufw allow 80/tcp
-ufw allow 443/tcp
-```
-Also make sure Serverspace's cloud firewall (in their panel) allows inbound 80, 443, 22.
-
-## 7. Launch 🚀
-
-```bash
-docker compose up -d --build
-```
-
-First run will: build the image, start Postgres, **apply migrations**, **seed the admin user
-+ default settings**, start the app, and Caddy will **fetch a Let's Encrypt certificate**.
-
-Watch it come up:
-```bash
-docker compose logs -f
-# look for: "Starting the app…", then Caddy "certificate obtained"
-```
-
-Visit **https://yourdomain.com** — you should see the sign-in page with a valid padlock.
-
-## 8. First login & hardening
-
-1. Log in with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`.
-2. Go to **Settings → Manage users**, open your admin user, and **change the password**.
-3. Fill in **Settings → Company info / VAT / FX** so invoices and defaults are correct.
-4. Add your partners and real data.
+In Vercel: **Project → Settings → Domains → Add**. Enter your domain; Vercel shows the exact
+DNS records to add at your registrar (an `A` record for the apex or a `CNAME` for `www`).
+HTTPS is automatic. NextAuth needs no change — `AUTH_TRUST_HOST=true` handles the new host.
 
 ---
 
-## Day-2 operations
+## Everyday workflow
 
-**Update to a new version** (after pulling new code):
-```bash
-cd /opt/inventory-app/inventory-app
-git pull          # or re-scp the folder
-docker compose up -d --build
-```
-Migrations apply automatically on restart.
-
-**Back up the database** (run on a schedule, e.g. cron):
-```bash
-docker compose exec -T db pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" \
-  | gzip > "backup-$(date +%F).sql.gz"
-```
-
-**Restore a backup:**
-```bash
-gunzip -c backup-YYYY-MM-DD.sql.gz | docker compose exec -T db psql -U "$POSTGRES_USER" "$POSTGRES_DB"
-```
-
-**Stop / start:**
-```bash
-docker compose down      # stop (data is kept in the db_data volume)
-docker compose up -d      # start again
-```
-
-**View logs:**
-```bash
-docker compose logs -f app
-docker compose logs -f caddy   # TLS / cert issues show here
-```
-
----
+- **Ship changes:** `git push` to the main branch → Vercel auto-builds & deploys. Any new
+  Prisma migrations apply automatically during the build.
+- **Preview deploys:** every PR/branch gets its own preview URL (point it at a separate Neon
+  branch if you want isolated preview data).
+- **Logs:** Vercel dashboard → your project → **Logs** (runtime) / **Deployments** (build).
+- **Database console / backups:** Neon dashboard → SQL Editor, branching, and point-in-time
+  restore are built in.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Browser shows "not secure" / no cert | DNS A record isn't pointing at `SERVER_IP` yet, or ports 80/443 are blocked. Check `dig +short yourdomain.com` and the cloud firewall. Caddy retries automatically. |
-| `app` keeps restarting | `docker compose logs app` — usually a bad `DATABASE_URL` or missing `AUTH_SECRET` in `.env`. |
-| Can't log in | Confirm the seed ran: `docker compose logs app | grep -i admin`. Re-seed: `docker compose exec app npx prisma db seed`. |
-| Migrations didn't apply | `docker compose exec app npx prisma migrate deploy` |
-| Need a shell in the DB | `docker compose exec db psql -U "$POSTGRES_USER" "$POSTGRES_DB"` |
+| Build fails at `prisma migrate deploy` | `DIRECT_URL` missing or wrong. It must be the **direct** (non-pooler) Neon string. |
+| App loads but DB calls error | `DATABASE_URL` should be the **pooled** (`-pooler`) Neon string. |
+| Can't log in / no admin | Check the build log for the seed step. Re-run locally: pull env with `npx vercel env pull .env.local`, then `npm run db:seed`. |
+| "PrismaClient is not generated" | Ensure `postinstall: prisma generate` is in package.json (it is) and the Root Directory is `inventory-app`. |
+| 404 on every route | Root Directory isn't set to `inventory-app`. |
 
 ---
 
-## Notes
+## Appendix — self-host alternative (Docker, in-UAE data residency)
 
-- **Data residency:** Postgres runs in a Docker volume on the UAE server; nothing leaves the region.
-- **Secrets:** `.env` is git-ignored. Never commit it. Keep a copy of `AUTH_SECRET` — rotating it logs everyone out.
-- **Scaling later:** if you outgrow one box, move Postgres to a managed UAE Postgres and point `DATABASE_URL` at it; the app containers stay stateless.
-- **Email/domain at one provider:** if you also want email on the domain, set MX records separately — they don't affect this app.
+If you need the database physically in the UAE, the repo also ships a Docker stack
+(**Postgres + app + Caddy auto-HTTPS**) you can run on a Serverspace UAE VPS:
+
+- `Dockerfile`, `docker-compose.yml`, `Caddyfile`, `docker-entrypoint.sh`, `.env.production.example`
+
+Run on the server with `docker compose up -d --build`. (Full self-host steps are preserved in
+git history of this file, or ask and I'll restore the detailed runbook.) This trades Vercel's
+zero-ops convenience for full in-region control.
