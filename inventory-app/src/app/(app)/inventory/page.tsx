@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
-import { getStockSummariesForItems, stockStatus } from "@/lib/items";
-import { formatAed, formatNumber } from "@/lib/money";
+import { getAvgPurchasePriceInr, getStockSummariesForItems, stockStatus } from "@/lib/items";
+import { formatAed, formatInr, formatNumber } from "@/lib/money";
 import {
   Card,
   EmptyState,
@@ -78,7 +78,10 @@ export default async function InventoryPage({
     orderBy: { name: "asc" },
   });
 
-  const summaries = await getStockSummariesForItems(items.map((i) => i.id));
+  const [summaries, purchaseInr] = await Promise.all([
+    getStockSummariesForItems(items.map((i) => i.id)),
+    getAvgPurchasePriceInr(items.map((i) => i.id)),
+  ]);
 
   const allRows = items
     .map((item) => {
@@ -89,6 +92,7 @@ export default async function InventoryPage({
         currentStock: stock,
         inventoryValueAed: summary?.inventoryValueAed,
         avgLandedCostAed: summary?.avgLandedCostAed,
+        avgPurchaseInr: purchaseInr.get(item.id),
         status: stockStatus(stock, item.reorderThreshold),
       };
     })
@@ -186,12 +190,13 @@ export default async function InventoryPage({
                   <TH>Category</TH>
                   <TH className="text-right">Stock</TH>
                   <TH className="text-right">Reorder at</TH>
+                  <TH className="text-right">Buying price (INR)</TH>
                   <TH className="text-right">Avg landed cost</TH>
                   <TH>Status</TH>
                 </TR>
               </THead>
               <tbody>
-                {rows.map(({ item, currentStock, avgLandedCostAed, status: s }) => (
+                {rows.map(({ item, currentStock, avgLandedCostAed, avgPurchaseInr, status: s }) => (
                   <TR key={item.id}>
                     <TD className="font-mono text-xs">
                       <Link href={`/inventory/${item.id}`} className="hover:underline">
@@ -209,6 +214,13 @@ export default async function InventoryPage({
                     </TD>
                     <TD className="text-right tabular-nums">
                       {item.reorderThreshold > 0 ? formatNumber(item.reorderThreshold) : <span className="text-neutral-400">—</span>}
+                    </TD>
+                    <TD className="text-right tabular-nums">
+                      {avgPurchaseInr && avgPurchaseInr.greaterThan(0) ? (
+                        formatInr(avgPurchaseInr)
+                      ) : (
+                        <span className="text-neutral-400">—</span>
+                      )}
                     </TD>
                     <TD className="text-right tabular-nums">
                       {avgLandedCostAed && currentStock > 0 ? (

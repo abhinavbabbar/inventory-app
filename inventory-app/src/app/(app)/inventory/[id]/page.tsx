@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { getStockSummariesForItems, stockStatus } from "@/lib/items";
-import { formatAed, formatNumber } from "@/lib/money";
+import { getAvgPurchasePriceInr, getStockSummariesForItems, stockStatus } from "@/lib/items";
+import { formatAed, formatInr, formatNumber } from "@/lib/money";
 import {
   Card,
   EmptyState,
@@ -41,8 +41,9 @@ export default async function ItemDetailPage({
   const item = await prisma.item.findUnique({ where: { id } });
   if (!item) notFound();
 
-  const [summaryMap, movements] = await Promise.all([
+  const [summaryMap, purchaseInrMap, movements] = await Promise.all([
     getStockSummariesForItems([id]),
+    getAvgPurchasePriceInr([id]),
     prisma.stockMovement.findMany({
       where: { itemId: id },
       orderBy: { createdAt: "desc" },
@@ -55,6 +56,7 @@ export default async function ItemDetailPage({
   ]);
 
   const summary = summaryMap.get(id);
+  const avgPurchaseInr = purchaseInrMap.get(id);
   const stock = summary?.currentStock ?? 0;
   const status = stockStatus(stock, item.reorderThreshold);
 
@@ -80,7 +82,7 @@ export default async function ItemDetailPage({
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card className="p-4">
           <div className="text-xs text-neutral-500">Current stock</div>
           <div className="text-2xl font-semibold mt-1 tabular-nums">
@@ -99,11 +101,19 @@ export default async function ItemDetailPage({
             {formatNumber(item.reorderThreshold)}
           </div>
         </Card>
+        <Card className="p-4 border-l-4 border-l-indigo-500">
+          <div className="text-xs text-neutral-500">Buying price (INR)</div>
+          <div className="text-2xl font-semibold mt-1 tabular-nums text-indigo-700 dark:text-indigo-400">
+            {avgPurchaseInr && avgPurchaseInr.greaterThan(0) ? formatInr(avgPurchaseInr) : "—"}
+          </div>
+          <div className="text-xs text-neutral-500 mt-1">avg ₹/unit paid</div>
+        </Card>
         <Card className="p-4">
           <div className="text-xs text-neutral-500">Avg landed cost</div>
           <div className="text-2xl font-semibold mt-1 tabular-nums">
             {summary && stock > 0 ? formatAed(summary.avgLandedCostAed) : "—"}
           </div>
+          <div className="text-xs text-neutral-500 mt-1">AED, after shipping + FX</div>
         </Card>
         <Card className="p-4">
           <div className="text-xs text-neutral-500">Inventory value</div>

@@ -8,6 +8,8 @@ import {
   getTopItemsByProfit,
 } from "@/lib/analytics";
 import { formatAed, formatInr, formatNumber } from "@/lib/money";
+import { getDefaultFxRate } from "@/lib/settings";
+import { Prisma } from "@prisma/client";
 import {
   Card,
   EmptyState,
@@ -26,16 +28,29 @@ export const metadata = { title: "Dashboard · Inventory & P&L" };
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 
 export default async function DashboardPage() {
-  const [kpis, monthly, topItems, recent] = await Promise.all([
+  const [kpis, monthly, topItems, recent, fxRateStr] = await Promise.all([
     getKpis(),
     getMonthlySeries(12),
     getTopItemsByProfit(5),
     getRecentActivity(10),
+    getDefaultFxRate(),
   ]);
   const partnerShares = await getPartnerShares(kpis.mtdNetProfitAed);
 
   const mtdLabel = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
   const hasAnyMonthlyData = monthly.some((m) => m.revenue !== 0 || m.cogs !== 0 || m.opex !== 0);
+
+  // INR equivalent of AED amounts, using the Settings FX rate (INR→AED): inr = aed / fx.
+  const fxRate = (() => {
+    try {
+      const r = new Prisma.Decimal(fxRateStr);
+      return r.greaterThan(0) ? r : null;
+    } catch {
+      return null;
+    }
+  })();
+  const inrEq = (aed: Prisma.Decimal): string | null =>
+    fxRate ? `≈ ${formatInr(aed.div(fxRate))}` : null;
 
   return (
     <div className="space-y-6">
@@ -51,6 +66,9 @@ export default async function DashboardPage() {
           <div className="text-xl font-semibold mt-1 tabular-nums text-emerald-700 dark:text-emerald-400">
             {kpis.totalInvestedAed.isZero() ? "—" : formatAed(kpis.totalInvestedAed)}
           </div>
+          {!kpis.totalInvestedAed.isZero() && inrEq(kpis.totalInvestedAed) && (
+            <div className="text-xs text-neutral-400 mt-1">{inrEq(kpis.totalInvestedAed)}</div>
+          )}
         </Card>
         <Card className="p-4 border-l-4 border-l-cyan-500">
           <div className="text-xs text-neutral-500">Inventory value</div>
@@ -59,6 +77,9 @@ export default async function DashboardPage() {
           </div>
           <div className="text-xs text-neutral-500 mt-1">
             {formatNumber(kpis.inventoryUnits)} units
+            {!kpis.inventoryValueAed.isZero() && inrEq(kpis.inventoryValueAed) && (
+              <span className="text-neutral-400"> · {inrEq(kpis.inventoryValueAed)}</span>
+            )}
           </div>
         </Card>
         <Card className="p-4 border-l-4 border-l-indigo-500">
@@ -66,6 +87,9 @@ export default async function DashboardPage() {
           <div className="text-xl font-semibold mt-1 tabular-nums text-indigo-700 dark:text-indigo-400">
             {kpis.mtdRevenueAed.isZero() ? "—" : formatAed(kpis.mtdRevenueAed)}
           </div>
+          {!kpis.mtdRevenueAed.isZero() && inrEq(kpis.mtdRevenueAed) && (
+            <div className="text-xs text-neutral-400 mt-1">{inrEq(kpis.mtdRevenueAed)}</div>
+          )}
         </Card>
         <Card className={`p-4 border-l-4 ${kpis.mtdGrossProfitAed.isNegative() ? "border-l-red-500" : "border-l-violet-500"}`}>
           <div className="text-xs text-neutral-500">MTD gross profit</div>
@@ -91,6 +115,9 @@ export default async function DashboardPage() {
           </div>
           <div className="text-xs text-neutral-500 mt-1">
             Opex {formatAed(kpis.mtdOpexAed)}
+            {!kpis.mtdNetProfitAed.isZero() && inrEq(kpis.mtdNetProfitAed) && (
+              <span className="text-neutral-400"> · {inrEq(kpis.mtdNetProfitAed)}</span>
+            )}
           </div>
         </Card>
         <Card className="p-4 border-l-4 border-l-amber-500">

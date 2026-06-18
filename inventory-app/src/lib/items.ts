@@ -10,6 +10,37 @@ export function stockStatus(currentStock: number, reorderThreshold: number): Sto
   return "OK";
 }
 
+// Weighted-average INR buying price per item, across all of its shipment lines
+// (sum of unitPurchasePriceInr × qty ÷ total qty). This is the raw purchase price
+// in INR — before shipping/FX — i.e. what you pay the supplier per unit.
+export async function getAvgPurchasePriceInr(
+  itemIds: string[],
+): Promise<Map<string, Prisma.Decimal>> {
+  const result = new Map<string, Prisma.Decimal>();
+  if (itemIds.length === 0) return result;
+
+  const lines = await prisma.shipmentLine.findMany({
+    where: { itemId: { in: itemIds } },
+    select: { itemId: true, quantity: true, unitPurchasePriceInr: true },
+  });
+
+  const value = new Map<string, Prisma.Decimal>();
+  const qty = new Map<string, number>();
+  for (const l of lines) {
+    value.set(
+      l.itemId,
+      (value.get(l.itemId) ?? d(0)).add((l.unitPurchasePriceInr as Prisma.Decimal).mul(l.quantity)),
+    );
+    qty.set(l.itemId, (qty.get(l.itemId) ?? 0) + l.quantity);
+  }
+
+  for (const id of itemIds) {
+    const q = qty.get(id) ?? 0;
+    result.set(id, q > 0 ? (value.get(id) ?? d(0)).div(q) : d(0));
+  }
+  return result;
+}
+
 // Per-item: current stock + weighted-average cost of remaining units (AED).
 export type ItemStockSummary = {
   itemId: string;
