@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/ui";
+import { getDefaultFxRate } from "@/lib/settings";
 import { NewPartnerForm } from "../_components/new-partner-form";
 
 export const metadata = { title: "New partner · Inventory & P&L" };
@@ -13,16 +14,14 @@ export default async function NewPartnerPage() {
     redirect("/partners");
   }
 
-  // Users who don't already have a Partner record. Show every active user;
-  // the action will promote them to PARTNER if not already.
-  const users = await prisma.user.findMany({
-    where: {
-      isActive: true,
-      partner: null,
-    },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, email: true, role: true },
-  });
+  const [users, defaultFxRate] = await Promise.all([
+    prisma.user.findMany({
+      where: { isActive: true, partner: null },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, email: true, role: true },
+    }),
+    getDefaultFxRate(),
+  ]);
 
   return (
     <div>
@@ -30,7 +29,7 @@ export default async function NewPartnerPage() {
         title="New partner"
         description="Pick an existing user or create a new one, then set their investment."
       />
-      <NewPartnerForm users={users} />
+      <NewPartnerForm users={users} defaultFxRate={defaultFxRate} />
     </div>
   );
 }

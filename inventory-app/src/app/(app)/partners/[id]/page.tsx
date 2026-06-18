@@ -14,7 +14,8 @@ import {
   TD,
   EmptyState,
 } from "@/components/ui";
-import { formatAed } from "@/lib/money";
+import { formatAed, formatInr } from "@/lib/money";
+import { getDefaultFxRate } from "@/lib/settings";
 
 import { EditPartnerForm } from "../_components/edit-partner-form";
 import { RemovePartnerButton } from "../_components/remove-partner-button";
@@ -37,6 +38,8 @@ export default async function PartnerDetailPage({
   if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/partners");
   }
+
+  const defaultFxRate = await getDefaultFxRate();
 
   const partner = await prisma.partner.findUnique({
     where: { id },
@@ -130,7 +133,7 @@ export default async function PartnerDetailPage({
       )}
 
       {/* Add contribution */}
-      <AddContributionForm action={addThis} />
+      <AddContributionForm action={addThis} defaultFxRate={defaultFxRate} />
 
       {/* Contribution ledger */}
       <section>
@@ -145,6 +148,7 @@ export default async function PartnerDetailPage({
                   <TH>Date</TH>
                   <TH>Notes</TH>
                   <TH className="text-right">Amount</TH>
+                  <TH className="text-right">AED (equity)</TH>
                   <TH className="text-right">Running total</TH>
                   <TH />
                 </TR>
@@ -159,14 +163,26 @@ export default async function PartnerDetailPage({
                       "use server";
                       await deleteThis();
                     }
+                    const isInr = c.currency === "INR";
                     return (
                       <TR key={c.id}>
                         <TD className="text-neutral-600 dark:text-neutral-400">
                           {dateFmt.format(c.contributedAt)}
                         </TD>
                         <TD>{c.notes ?? <span className="text-neutral-400">—</span>}</TD>
-                        <TD className="text-right tabular-nums font-medium text-emerald-700 dark:text-emerald-400">
-                          +{formatAed(c.amountAed)}
+                        <TD className="text-right tabular-nums font-medium">
+                          {isInr ? (
+                            <span className="text-indigo-700 dark:text-indigo-400">
+                              +{formatInr(c.amountOriginal)}
+                            </span>
+                          ) : (
+                            <span className="text-emerald-700 dark:text-emerald-400">
+                              +{formatAed(c.amountOriginal)}
+                            </span>
+                          )}
+                        </TD>
+                        <TD className="text-right tabular-nums text-emerald-700 dark:text-emerald-400 font-medium">
+                          {isInr ? formatAed(c.amountAed) : <span className="text-neutral-400">—</span>}
                         </TD>
                         <TD className="text-right tabular-nums text-neutral-500">
                           {formatAed(cum)}

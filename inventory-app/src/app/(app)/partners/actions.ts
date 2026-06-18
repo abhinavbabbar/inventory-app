@@ -48,7 +48,13 @@ const newPartnerSchema = z
       .max(72)
       .optional()
       .nullable(),
-    investmentAed: decimalString,
+    investmentCurrency: z.enum(["AED", "INR"]).default("AED"),
+    investmentAmount: decimalString,
+    investmentFxRate: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v == null || v.length === 0 ? null : v)),
     notes: z
       .string()
       .trim()
@@ -65,6 +71,14 @@ const newPartnerSchema = z
       v.userMode === "existing" ||
       (v.userMode === "new" && v.newUserName != null && v.newUserEmail != null && v.newUserPassword != null),
     { message: "Name, email and password are required", path: ["newUserName"] },
+  )
+  .refine(
+    (v) =>
+      v.investmentCurrency === "AED" ||
+      (v.investmentFxRate != null &&
+        /^\d+(\.\d+)?$/.test(v.investmentFxRate) &&
+        parseFloat(v.investmentFxRate) > 0),
+    { message: "FX rate is required for INR investment", path: ["investmentFxRate"] },
   );
 
 const updatePartnerSchema = z.object({
@@ -76,16 +90,31 @@ const updatePartnerSchema = z.object({
     .transform((v) => (v == null || v.length === 0 ? null : v)),
 });
 
-const contributionSchema = z.object({
-  amountAed: decimalString.refine((v) => parseFloat(v) > 0, "Amount must be greater than zero"),
-  contributedAt: z.coerce.date(),
-  notes: z
-    .string()
-    .trim()
-    .max(500)
-    .optional()
-    .transform((v) => (v == null || v.length === 0 ? null : v)),
-});
+const contributionSchema = z
+  .object({
+    currency: z.enum(["AED", "INR"]),
+    amountOriginal: decimalString.refine((v) => parseFloat(v) > 0, "Amount must be greater than zero"),
+    fxRateInrToAed: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v == null || v.length === 0 ? null : v)),
+    contributedAt: z.coerce.date(),
+    notes: z
+      .string()
+      .trim()
+      .max(500)
+      .optional()
+      .transform((v) => (v == null || v.length === 0 ? null : v)),
+  })
+  .refine(
+    (v) =>
+      v.currency === "AED" ||
+      (v.fxRateInrToAed != null &&
+        /^\d+(\.\d+)?$/.test(v.fxRateInrToAed) &&
+        parseFloat(v.fxRateInrToAed) > 0),
+    { message: "FX rate is required for INR contributions", path: ["fxRateInrToAed"] },
+  );
 
 export type PartnerFormState = {
   errors?: {
@@ -115,7 +144,9 @@ export async function createPartner(
     newUserName: formData.get("newUserName"),
     newUserEmail: formData.get("newUserEmail"),
     newUserPassword: formData.get("newUserPassword") || null,
-    investmentAed: formData.get("investmentAed"),
+    investmentCurrency: formData.get("investmentCurrency") ?? "AED",
+    investmentAmount: formData.get("investmentAmount"),
+    investmentFxRate: formData.get("investmentFxRate"),
     notes: formData.get("notes"),
   });
   if (!parsed.success) return fieldErrors(parsed.error);
@@ -128,7 +159,6 @@ export async function createPartner(
         const user = await tx.user.findUnique({ where: { id: data.userId! } });
         if (!user) throw new FormError("Selected user no longer exists", "userId");
         if (user.role !== "PARTNER") {
-          // Promote to PARTNER if currently a different role — admins can do this.
           await tx.user.update({ where: { id: user.id }, data: { role: "PARTNER" } });
         }
         const existing = await tx.partner.findUnique({ where: { userId: user.id } });
@@ -149,11 +179,15 @@ export async function createPartner(
         userId = user.id;
       }
 
-      const amount = new Prisma.Decimal(data.investmentAed);
+      const { investmentCurrency: currency, investmentAmount, investmentFxRate } = data;
+      const originalDec = new Prisma.Decimal(investmentAmount);
+      const fxDec = investmentFxRate ? new Prisma.Decimal(investmentFxRate) : null;
+      const amountAed = currency === "AED" ? originalDec : originalDec.mul(fxDec!);
+
       const partner = await tx.partner.create({
         data: {
           userId,
-          investmentAed: amount,
+          investmentAed: amountAed,
           notes: data.notes,
         },
       });
@@ -161,7 +195,10 @@ export async function createPartner(
       await tx.partnerInvestment.create({
         data: {
           partnerId: partner.id,
-          amountAed: amount,
+          currency,
+          amountOriginal: originalDec,
+          fxRateInrToAed: fxDec,
+          amountAed,
           contributedAt: new Date(),
           notes: "Initial investment",
         },
@@ -208,19 +245,29 @@ export async function addContribution(
 ): Promise<PartnerFormState> {
   await requireAdmin();
   const parsed = contributionSchema.safeParse({
-    amountAed: formData.get("amountAed"),
+    currency: formData.get("currency") ?? "AED",
+    amountOriginal: formData.get("amountOriginal"),
+    fxRateInrToAed: formData.get("fxRateInrToAed"),
     contributedAt: formData.get("contributedAt"),
     notes: formData.get("notes"),
   });
   if (!parsed.success) return fieldErrors(parsed.error);
 
+  const { currency, amountOriginal, fxRateInrToAed, contributedAt, notes } = parsed.data;
+  const originalDec = new Prisma.Decimal(amountOriginal);
+  const fxDec = fxRateInrToAed ? new Prisma.Decimal(fxRateInrToAed) : null;
+  const amountAed = currency === "AED" ? originalDec : originalDec.mul(fxDec!);
+
   await prisma.$transaction(async (tx) => {
     await tx.partnerInvestment.create({
       data: {
         partnerId,
-        amountAed: new Prisma.Decimal(parsed.data.amountAed),
-        contributedAt: parsed.data.contributedAt,
-        notes: parsed.data.notes,
+        currency,
+        amountOriginal: originalDec,
+        fxRateInrToAed: fxDec,
+        amountAed,
+        contributedAt,
+        notes,
       },
     });
     await recomputePartnerTotal(tx, partnerId);

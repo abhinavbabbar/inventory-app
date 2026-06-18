@@ -51,12 +51,15 @@ model Partner {
 // One dated row per capital contribution. The running total is denormalized
 // onto Partner.investmentAed (recomputed in a transaction on every change).
 model PartnerInvestment {
-  id            String   @id @default(cuid())
-  partnerId     String
-  amountAed     Decimal
-  contributedAt DateTime
-  notes         String?
-  createdAt     DateTime @default(now())
+  id             String   @id @default(cuid())
+  partnerId      String
+  currency       String   @default("AED") // AED | INR
+  amountOriginal Decimal  // amount in the stated currency
+  fxRateInrToAed Decimal? // locked rate for INR contributions; null for AED
+  amountAed      Decimal  // canonical AED value (drives ownership share)
+  contributedAt  DateTime
+  notes          String?
+  createdAt      DateTime @default(now())
 
   partner Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
 

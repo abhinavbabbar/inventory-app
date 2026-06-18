@@ -95,9 +95,9 @@ async function seedSampleData() {
   if ((await prisma.partnerInvestment.count({ where: { partnerId: pA.id } })) === 0) {
     await prisma.partnerInvestment.createMany({
       data: [
-        { partnerId: pA.id, amountAed: d(40000), contributedAt: daysAgo(90), notes: "Initial investment" },
-        { partnerId: pA.id, amountAed: d(20000), contributedAt: daysAgo(25), notes: "Q2 top-up" },
-        { partnerId: pB.id, amountAed: d(40000), contributedAt: daysAgo(90), notes: "Initial investment" },
+        { partnerId: pA.id, currency: "AED", amountOriginal: d(40000), amountAed: d(40000), contributedAt: daysAgo(90), notes: "Initial investment" },
+        { partnerId: pA.id, currency: "AED", amountOriginal: d(20000), amountAed: d(20000), contributedAt: daysAgo(25), notes: "Q2 top-up" },
+        { partnerId: pB.id, currency: "AED", amountOriginal: d(40000), amountAed: d(40000), contributedAt: daysAgo(90), notes: "Initial investment" },
       ],
     });
   }
