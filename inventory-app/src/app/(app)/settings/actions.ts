@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { can } from "@/lib/permissions";
+import { refreshCbuaeRate } from "@/lib/fx";
 
 const companyInfoSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
@@ -98,6 +99,26 @@ export async function saveFxRate(
   revalidatePath("/settings");
   revalidatePath("/shipments/new");
   return { message: "FX rate saved" };
+}
+
+// Force a fresh pull of the UAE Central Bank rate and re-render the pages that
+// surface it. Does not change the saved default — only refreshes the live read.
+export async function refreshLiveFxRate(): Promise<void> {
+  await requireSettingsEdit();
+  await refreshCbuaeRate();
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+}
+
+// Pull the latest CBUAE rate and persist it as the app's default FX rate
+// (INR→AED), which pre-fills new shipments and drives INR equivalents.
+export async function applyLiveFxRateAsDefault(): Promise<void> {
+  await requireSettingsEdit();
+  const live = await refreshCbuaeRate();
+  await upsertSetting("default_fx_rate", live.inrToAed.toString());
+  revalidatePath("/settings");
+  revalidatePath("/shipments/new");
+  revalidatePath("/dashboard");
 }
 
 function fieldErrors(error: z.ZodError): SettingsFormState {

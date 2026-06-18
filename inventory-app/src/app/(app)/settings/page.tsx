@@ -4,11 +4,13 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { can } from "@/lib/permissions";
 import { getCompanyInfo, getDefaultFxRate, getVatSettings } from "@/lib/settings";
+import { getCbuaeRate } from "@/lib/fx";
 import { Card, LinkButton, PageHeader } from "@/components/ui";
 
 import { CompanyInfoForm } from "./_components/company-info-form";
 import { VatForm } from "./_components/vat-form";
 import { FxRateForm } from "./_components/fx-form";
+import { FxLiveCard } from "./_components/fx-live-card";
 
 export const metadata = { title: "Settings · Inventory & P&L" };
 
@@ -21,10 +23,11 @@ export default async function SettingsPage() {
   const canEdit = can(session.user, "settings", "edit");
   const isAdmin = session.user.role === "ADMIN";
 
-  const [company, vat, fx] = await Promise.all([
+  const [company, vat, fx, liveRate] = await Promise.all([
     getCompanyInfo(),
     getVatSettings(),
     getDefaultFxRate(),
+    getCbuaeRate(),
   ]);
 
   return (
@@ -51,6 +54,7 @@ export default async function SettingsPage() {
 
       <CompanyInfoForm defaultValues={company} readOnly={!canEdit} />
       <VatForm defaultValues={vat} readOnly={!canEdit} />
+      <FxLiveCard rate={liveRate} canEdit={canEdit} />
       <FxRateForm defaultValues={{ defaultFxRate: fx }} readOnly={!canEdit} />
 
       {isAdmin && (

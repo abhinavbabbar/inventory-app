@@ -9,6 +9,7 @@ import {
 } from "@/lib/analytics";
 import { formatAed, formatInr, formatNumber } from "@/lib/money";
 import { getDefaultFxRate } from "@/lib/settings";
+import { getCbuaeRate } from "@/lib/fx";
 import { Prisma } from "@prisma/client";
 import {
   Card,
@@ -28,12 +29,13 @@ export const metadata = { title: "Dashboard · Inventory & P&L" };
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 
 export default async function DashboardPage() {
-  const [kpis, monthly, topItems, recent, fxRateStr] = await Promise.all([
+  const [kpis, monthly, topItems, recent, fxRateStr, liveRate] = await Promise.all([
     getKpis(),
     getMonthlySeries(12),
     getTopItemsByProfit(5),
     getRecentActivity(10),
     getDefaultFxRate(),
+    getCbuaeRate(),
   ]);
   const partnerShares = await getPartnerShares(kpis.mtdNetProfitAed);
 
@@ -58,6 +60,28 @@ export default async function DashboardPage() {
         title="Dashboard"
         description={`Snapshot for ${mtdLabel}.`}
       />
+
+      {/* UAE Central Bank live FX rate */}
+      <Link
+        href="/settings"
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-cyan-200 dark:border-cyan-900 bg-cyan-50 dark:bg-cyan-900/20 px-4 py-2.5 text-sm hover:bg-cyan-100/70 dark:hover:bg-cyan-900/30 transition-colors"
+      >
+        <span className="font-medium text-cyan-800 dark:text-cyan-300">UAE Central Bank rate</span>
+        <span className="tabular-nums text-neutral-700 dark:text-neutral-200">
+          1 AED = ₹{liveRate.aedToInr.toLocaleString("en-IN", { maximumFractionDigits: 4 })}
+        </span>
+        <span className="tabular-nums text-neutral-700 dark:text-neutral-200">
+          1 INR = {liveRate.inrToAed.toLocaleString("en-AE", { maximumFractionDigits: 6 })} AED
+        </span>
+        <span className="text-neutral-400 ml-auto">
+          {liveRate.source === "CBUAE_LIVE" && liveRate.updatedLabel
+            ? `Updated ${liveRate.updatedLabel}`
+            : liveRate.source === "CBUAE_CACHE"
+              ? "Cached rate"
+              : "Saved rate"}{" "}
+          · Convert →
+        </span>
+      </Link>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
