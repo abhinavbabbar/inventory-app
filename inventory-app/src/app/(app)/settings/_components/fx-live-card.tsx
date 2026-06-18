@@ -17,12 +17,16 @@ function fmt(n: number, currency: "AED" | "INR"): string {
 }
 
 const SOURCE_BADGE: Record<FxRate["source"], { label: string; cls: string }> = {
-  CBUAE_LIVE: {
-    label: "Live",
+  CBUAE: {
+    label: "Central Bank · Live",
     cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
   },
-  CBUAE_CACHE: {
-    label: "Cached",
+  MARKET: {
+    label: "Market · Live",
+    cls: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
+  },
+  CACHE: {
+    label: "Recent",
     cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
   },
   MANUAL: {
@@ -31,8 +35,15 @@ const SOURCE_BADGE: Record<FxRate["source"], { label: string; cls: string }> = {
   },
 };
 
+const SOURCE_NOTE: Record<FxRate["source"], string> = {
+  CBUAE: "Source: Central Bank of the UAE (centralbank.ae)",
+  MARKET: "Central Bank feed unreachable — showing live market rate",
+  CACHE: "Live feeds unreachable — showing the most recent fetched rate",
+  MANUAL: "Live feeds unreachable — showing your saved default rate",
+};
+
 export function FxLiveCard({ rate, canEdit }: { rate: FxRate; canEdit: boolean }) {
-  const [direction, setDirection] = useState<Direction>("AED_TO_INR");
+  const [direction, setDirection] = useState<Direction>("INR_TO_AED");
   const [amount, setAmount] = useState("100");
   const [pending, startTransition] = useTransition();
 
@@ -43,7 +54,6 @@ export function FxLiveCard({ rate, canEdit }: { rate: FxRate; canEdit: boolean }
   const result = Number.isFinite(parsed) ? parsed * factor : NaN;
 
   const badge = SOURCE_BADGE[rate.source];
-  const isLive = rate.source !== "MANUAL";
 
   return (
     <Card className="p-6 space-y-5 border-l-4 border-l-cyan-500">
@@ -56,12 +66,8 @@ export function FxLiveCard({ rate, canEdit }: { rate: FxRate; canEdit: boolean }
             </span>
           </h2>
           <p className="text-sm text-neutral-500">
-            Source: Central Bank of the UAE (centralbank.ae)
-            {rate.updatedLabel && isLive ? (
-              <> · Updated {rate.updatedLabel}</>
-            ) : rate.source === "MANUAL" ? (
-              <> · Live feed unavailable, showing your saved rate</>
-            ) : null}
+            {SOURCE_NOTE[rate.source]}
+            {rate.updatedLabel ? <> · {rate.updatedLabel}</> : null}
           </p>
         </div>
       </div>

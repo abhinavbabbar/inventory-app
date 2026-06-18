@@ -74,11 +74,13 @@ export default async function DashboardPage() {
           1 INR = {liveRate.inrToAed.toLocaleString("en-AE", { maximumFractionDigits: 6 })} AED
         </span>
         <span className="text-neutral-400 ml-auto">
-          {liveRate.source === "CBUAE_LIVE" && liveRate.updatedLabel
-            ? `Updated ${liveRate.updatedLabel}`
-            : liveRate.source === "CBUAE_CACHE"
-              ? "Cached rate"
-              : "Saved rate"}{" "}
+          {liveRate.source === "CBUAE"
+            ? `Central Bank${liveRate.updatedLabel ? ` · ${liveRate.updatedLabel}` : ""}`
+            : liveRate.source === "MARKET"
+              ? "Market rate"
+              : liveRate.source === "CACHE"
+                ? "Recent rate"
+                : "Saved rate"}{" "}
           · Convert →
         </span>
       </Link>
