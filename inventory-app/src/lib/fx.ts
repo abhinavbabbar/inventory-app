@@ -128,7 +128,21 @@ async function fetchMarket(): Promise<ParsedRate> {
   return { inrToAed: 1 / inrPerAed, updatedLabel: label };
 }
 
-// --- DB cache (offline fallback) -------------------------------------------
+// --- DB cache (the authoritative store, kept CBUAE-only) --------------------
+//
+// This row holds the most recent *Central Bank* value. It is written by:
+//   - a successful in-request live CBUAE fetch, and
+//   - the daily GitHub Action via the /api/fx/ingest endpoint (ingestCbuaeRate),
+//     which runs from an IP CBUAE doesn't block.
+// The live market fallback intentionally does NOT write here, so this row never
+// gets clobbered by an approximate rate.
+
+// How long a stored CBUAE value is still considered "today's rate". CBUAE only
+// publishes on business days, so 4 days covers a weekend plus a public holiday.
+const CBUAE_FRESH_MS = 4 * 24 * 60 * 60 * 1000;
+// Plausible band for INR→AED — rejects garbage / inverted (aed→inr) values.
+const MIN_INR_AED = 0.01;
+const MAX_INR_AED = 0.1;
 
 type CachedRate = { inrToAed: number; updatedLabel: string | null; cachedAt: string };
 
@@ -167,60 +181,105 @@ async function writeCache(p: ParsedRate): Promise<void> {
   }
 }
 
+function isCacheFresh(c: CachedRate): boolean {
+  const t = Date.parse(c.cachedAt);
+  return Number.isFinite(t) && Date.now() - t < CBUAE_FRESH_MS;
+}
+
 // --- in-memory cache (per warm instance) -----------------------------------
 
 let mem: { rate: FxRate; ts: number } | null = null;
 
-async function resolveLive(): Promise<FxRate | null> {
-  try {
-    return withDerived(await fetchCbuae(), "CBUAE");
-  } catch {
-    /* fall through to market */
-  }
-  try {
-    return withDerived(await fetchMarket(), "MARKET");
-  } catch {
-    return null;
-  }
-}
-
 // --- Public API -------------------------------------------------------------
 
 /**
- * Resilient accessor used by pages. CBUAE → market → DB cache → manual default.
+ * Resilient accessor used by pages. Priority:
+ *   1. live CBUAE (exact, this request)
+ *   2. recent CBUAE value from the DB (written by the daily job) — still exact
+ *   3. live market rate (≈CBUAE, never stale)
+ *   4. any stored value, even if old
+ *   5. the manually configured default rate
  * Never throws. Cached in memory for an hour within a warm serverless instance.
  */
 export async function getCbuaeRate(): Promise<FxRate> {
   if (mem && Date.now() - mem.ts < MEM_TTL_MS) return mem.rate;
 
-  const live = await resolveLive();
-  if (live) {
-    mem = { rate: live, ts: Date.now() };
-    void writeCache({ inrToAed: live.inrToAed, updatedLabel: live.updatedLabel });
-    return live;
+  // 1. Live Central Bank.
+  try {
+    const p = await fetchCbuae();
+    void writeCache(p);
+    const rate = withDerived(p, "CBUAE");
+    mem = { rate, ts: Date.now() };
+    return rate;
+  } catch {
+    /* blocked or down — try the stored value next */
   }
 
   const cached = await readCache();
+
+  // 2. Recent Central Bank value (from the daily job) — authoritative.
+  if (cached && isCacheFresh(cached)) {
+    const rate = withDerived({ inrToAed: cached.inrToAed, updatedLabel: cached.updatedLabel }, "CBUAE");
+    mem = { rate, ts: Date.now() };
+    return rate;
+  }
+
+  // 3. Live market rate (≈CBUAE). Does not overwrite the CBUAE store.
+  try {
+    const p = await fetchMarket();
+    const rate = withDerived(p, "MARKET");
+    mem = { rate, ts: Date.now() };
+    return rate;
+  } catch {
+    /* fall through to whatever we have */
+  }
+
+  // 4. Stale stored value.
   if (cached) {
     return withDerived({ inrToAed: cached.inrToAed, updatedLabel: cached.updatedLabel }, "CACHE");
   }
 
+  // 5. Manual default.
   const manual = Number.parseFloat(await getDefaultFxRate());
   const safe = Number.isFinite(manual) && manual > 0 ? manual : 0.0445;
   return withDerived({ inrToAed: safe, updatedLabel: null }, "MANUAL");
 }
 
 /**
- * Forces a fresh fetch (ignores the in-memory cache) and persists it. Used by
- * the "Refresh" / "Use as default" actions. Falls back like getCbuaeRate.
+ * Forces a fresh resolution (ignores the in-memory cache). Used by the
+ * "Refresh" / "Use as default" actions.
  */
 export async function refreshCbuaeRate(): Promise<FxRate> {
   mem = null;
-  const live = await resolveLive();
-  if (live) {
-    mem = { rate: live, ts: Date.now() };
-    await writeCache({ inrToAed: live.inrToAed, updatedLabel: live.updatedLabel });
-    return live;
-  }
   return getCbuaeRate();
+}
+
+/**
+ * Stores a Central Bank rate pushed in by the daily job (/api/fx/ingest).
+ * Validates the value is a plausible INR→AED figure before persisting.
+ */
+export async function ingestCbuaeRate(p: {
+  inrToAed: number;
+  updatedLabel: string | null;
+}): Promise<void> {
+  if (!Number.isFinite(p.inrToAed) || p.inrToAed < MIN_INR_AED || p.inrToAed > MAX_INR_AED) {
+    throw new Error(`inrToAed out of range (${MIN_INR_AED}–${MAX_INR_AED})`);
+  }
+  await writeCache({ inrToAed: p.inrToAed, updatedLabel: p.updatedLabel });
+  mem = null; // invalidate so the next read reflects the new value
+}
+
+/** Read-only peek at the stored CBUAE value (no network). For the ingest GET. */
+export async function peekStoredRate(): Promise<
+  ({ inrToAed: number; aedToInr: number; updatedLabel: string | null; cachedAt: string; fresh: boolean }) | null
+> {
+  const c = await readCache();
+  if (!c) return null;
+  return {
+    inrToAed: c.inrToAed,
+    aedToInr: 1 / c.inrToAed,
+    updatedLabel: c.updatedLabel,
+    cachedAt: c.cachedAt,
+    fresh: isCacheFresh(c),
+  };
 }

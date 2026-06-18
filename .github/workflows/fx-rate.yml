@@ -1,0 +1,33 @@
+name: Daily FX rate (CBUAE)
+
+# Pushes the UAE Central Bank INR→AED rate into the app once per business day.
+# Runs from a GitHub-hosted runner (an IP CBUAE does not block), unlike Vercel.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   FX_INGEST_URL     https://<your-production-domain>/api/fx/ingest
+#   FX_INGEST_SECRET  a long random string; must equal the app's FX_INGEST_SECRET env var
+
+on:
+  schedule:
+    # 15:00 UTC = 19:00 Gulf time, after CBUAE's ~18:00 publish, Mon–Fri.
+    - cron: "0 15 * * 1-5"
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+# Avoid overlapping runs.
+concurrency:
+  group: fx-rate
+  cancel-in-progress: false
+
+jobs:
+  push-rate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Fetch CBUAE rate and push to app
+        env:
+          FX_INGEST_URL: ${{ secrets.FX_INGEST_URL }}
+          FX_INGEST_SECRET: ${{ secrets.FX_INGEST_SECRET }}
+        run: node inventory-app/scripts/push-fx-rate.mjs

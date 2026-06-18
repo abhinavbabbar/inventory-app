@@ -18,7 +18,7 @@ function fmt(n: number, currency: "AED" | "INR"): string {
 
 const SOURCE_BADGE: Record<FxRate["source"], { label: string; cls: string }> = {
   CBUAE: {
-    label: "Central Bank · Live",
+    label: "Central Bank",
     cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
   },
   MARKET: {
