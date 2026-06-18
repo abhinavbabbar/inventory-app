@@ -7,12 +7,17 @@
 // exact official rate to serve.
 //
 // Env:
-//   FX_INGEST_URL     full URL of the ingest endpoint
-//                     e.g. https://your-app.vercel.app/api/fx/ingest
-//   FX_INGEST_SECRET  shared bearer token (must match the app's env var)
+//   FX_INGEST_URL          full URL of the ingest endpoint
+//                          e.g. https://your-app.vercel.app/api/fx/ingest
+//   FX_INGEST_SECRET       shared bearer token (must match the app's env var)
+//   VERCEL_PROTECTION_BYPASS  (optional) Vercel "Protection Bypass for
+//                          Automation" secret — set this if the deployment has
+//                          Deployment Protection enabled, so the request gets
+//                          past Vercel's auth wall to reach our endpoint.
 
 const INGEST_URL = process.env.FX_INGEST_URL;
 const INGEST_SECRET = process.env.FX_INGEST_SECRET;
+const PROTECTION_BYPASS = process.env.VERCEL_PROTECTION_BYPASS;
 
 const CBUAE_ENDPOINT =
   "https://www.centralbank.ae/umbraco/Surface/Exchange/GetExchangeRateAllCurrency";
@@ -113,12 +118,16 @@ async function main() {
       `${rate.updatedLabel ? ` · ${rate.updatedLabel}` : ""}`,
   );
 
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${INGEST_SECRET}`,
+  };
+  // Get past Vercel Deployment Protection, if enabled on the target.
+  if (PROTECTION_BYPASS) headers["x-vercel-protection-bypass"] = PROTECTION_BYPASS;
+
   const res = await fetch(INGEST_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${INGEST_SECRET}`,
-    },
+    headers,
     body: JSON.stringify({ inrToAed: rate.inrToAed, updatedLabel: rate.updatedLabel }),
   });
 

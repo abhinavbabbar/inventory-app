@@ -30,4 +30,6 @@ jobs:
         env:
           FX_INGEST_URL: ${{ secrets.FX_INGEST_URL }}
           FX_INGEST_SECRET: ${{ secrets.FX_INGEST_SECRET }}
+          # Optional — only needed if production keeps Vercel Deployment Protection on.
+          VERCEL_PROTECTION_BYPASS: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
         run: node inventory-app/scripts/push-fx-rate.mjs

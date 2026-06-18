@@ -38,30 +38,54 @@ Files:
 ## One-time setup
 
 Everything already works via the market fallback (~correct). Do this to get the
-**exact** Central Bank number landing daily:
+**exact** Central Bank number landing daily.
 
-1. **Create a shared secret** (any long random string):
-   ```bash
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-   ```
+### 0. The endpoint must be live on the target deployment
 
-2. **Vercel** → Project → Settings → Environment Variables → add for **Production**:
-   - `FX_INGEST_SECRET` = the value from step 1
-   - Redeploy production so it takes effect.
+`/api/fx/ingest` ships with this code. Pushes to `main` deploy to **Preview**;
+**Production** runs the `production` branch — so promote/merge this code to
+`production` before pointing the job at the production URL (or, to test first,
+point `FX_INGEST_URL` at the current Preview URL).
 
-3. **GitHub** → repo → Settings → Secrets and variables → **Actions** → add:
-   - `FX_INGEST_SECRET` = the **same** value from step 1
-   - `FX_INGEST_URL` = `https://<your-production-domain>/api/fx/ingest`
+### 1. Let the request reach the endpoint (Deployment Protection)
 
-4. **Run it once now**: GitHub → Actions → "Daily FX rate (CBUAE)" → *Run workflow*.
-   Then open Settings — the badge should read **Central Bank**.
+If your deployment shows a Vercel "Authentication Required" page (HTTP 401),
+that auth wall blocks the job. Pick one:
+
+- **Easiest** — Vercel → Project → Settings → **Deployment Protection** →
+  *Vercel Authentication* → protect **Only Preview Deployments**. Production
+  becomes reachable (the app still requires its own login), and the ingest
+  endpoint stays protected by the bearer token below. No extra secret needed.
+- **Keep production protected** — Settings → Deployment Protection →
+  **Protection Bypass for Automation** → generate a secret, then add it as a
+  GitHub Actions secret named `VERCEL_PROTECTION_BYPASS`. The job sends it as
+  the `x-vercel-protection-bypass` header.
+
+### 2. Create a shared secret
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+### 3. Vercel → Settings → Environment Variables (Production)
+
+- `FX_INGEST_SECRET` = the value from step 2 → redeploy production.
+
+### 4. GitHub → repo → Settings → Secrets and variables → Actions
+
+- `FX_INGEST_SECRET` = the **same** value from step 2
+- `FX_INGEST_URL` = `https://<your-production-domain>/api/fx/ingest`
+- `VERCEL_PROTECTION_BYPASS` = only if you chose the bypass route in step 1
+
+### 5. Run it once
+
+GitHub → Actions → "Daily FX rate (CBUAE)" → *Run workflow*. Then open Settings —
+the badge should read **Central Bank**.
 
 ### Verify
-- Health check (no secret needed): `GET https://<your-domain>/api/fx/ingest`
-  returns the currently stored value.
-- The workflow log prints the rate it pushed, e.g.
+- Health check: `GET https://<your-domain>/api/fx/ingest` returns the stored value.
+- The workflow log prints what it pushed, e.g.
   `→ CBUAE: 1 INR = 0.038929 AED (1 AED = 25.6878 INR)`.
 
-> Point `FX_INGEST_URL` at your **production** domain so the value lands in the
-> production database. If a deploy uses a fresh database, just re-run the
-> workflow once.
+> Point `FX_INGEST_URL` at the deployment whose database you want updated
+> (normally Production). If a deploy uses a fresh database, just re-run the job.
