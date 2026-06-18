@@ -7,6 +7,7 @@ import type { ShippingAllocationMethod } from "@/lib/domain";
 import { createShipment, type ShipmentFormState } from "../../actions";
 
 type ItemOption = { id: string; sku: string; name: string; unit: string };
+type SupplierOption = { id: string; name: string };
 
 type LineState = {
   itemId: string;
@@ -62,7 +63,7 @@ function previewLines(args: {
   });
 }
 
-export function ShipmentForm({ items }: { items: ItemOption[] }) {
+export function ShipmentForm({ items, suppliers }: { items: ItemOption[]; suppliers: SupplierOption[] }) {
   const [state, formAction, pending] = useActionState<ShipmentFormState, FormData>(
     createShipment,
     {},
@@ -131,6 +132,20 @@ export function ShipmentForm({ items }: { items: ItemOption[] }) {
             <Label htmlFor="reference">Reference</Label>
             <Input id="reference" name="reference" defaultValue={defaultRef} required maxLength={64} />
             {fieldErr("reference") && <p className="text-xs text-red-600 mt-1">{fieldErr("reference")}</p>}
+          </div>
+          <div>
+            <Label htmlFor="supplierId">
+              Supplier <span className="text-neutral-400 font-normal">(optional)</span>
+            </Label>
+            <Select id="supplierId" name="supplierId" defaultValue="" disabled={suppliers.length === 0}>
+              <option value="">— No supplier —</option>
+              {suppliers.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </Select>
+            <p className="text-xs text-neutral-500 mt-1">
+              Links this purchase to a supplier so you can track dues. Manage in Suppliers.
+            </p>
           </div>
           <div>
             <Label htmlFor="shippedAt">Shipped on</Label>

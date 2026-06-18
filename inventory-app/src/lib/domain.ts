@@ -30,6 +30,23 @@ export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export const ORDER_STATUSES = ["IN_PROGRESS", "DISPATCHED", "CANCELLED"] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+export const SUPPLIER_PAYMENT_METHODS = [
+  "CASH",
+  "BANK_TRANSFER",
+  "UPI",
+  "CHEQUE",
+  "OTHER",
+] as const;
+export type SupplierPaymentMethod = (typeof SUPPLIER_PAYMENT_METHODS)[number];
+
+export const SUPPLIER_PAYMENT_METHOD_LABELS: Record<SupplierPaymentMethod, string> = {
+  CASH: "Cash",
+  BANK_TRANSFER: "Bank transfer",
+  UPI: "UPI",
+  CHEQUE: "Cheque",
+  OTHER: "Other",
+};
+
 export const SETTING_KEYS = {
   companyInfo: "company_info", // { name, address, logoUrl, trn }
   defaultFxRate: "default_fx_rate", // string of Decimal

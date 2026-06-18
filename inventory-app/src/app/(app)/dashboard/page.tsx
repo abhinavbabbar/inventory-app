@@ -45,7 +45,7 @@ export default async function DashboardPage() {
       />
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <Card className="p-4 border-l-4 border-l-emerald-500">
           <div className="text-xs text-neutral-500">Total invested</div>
           <div className="text-xl font-semibold mt-1 tabular-nums text-emerald-700 dark:text-emerald-400">
@@ -128,6 +128,21 @@ export default async function DashboardPage() {
             )}
             {kpis.outCount === 0 && kpis.shortageCount === 0 && (
               <span className="text-xs text-neutral-500">All in stock</span>
+            )}
+          </div>
+        </Card>
+        <Card className={`p-4 border-l-4 ${kpis.supplierDuesInr.greaterThan(0) ? "border-l-amber-500" : "border-l-neutral-300 dark:border-l-neutral-700"}`}>
+          <div className="text-xs text-neutral-500">Supplier dues</div>
+          <div className={`text-xl font-semibold mt-1 tabular-nums ${kpis.supplierDuesInr.greaterThan(0) ? "text-amber-700 dark:text-amber-400" : ""}`}>
+            {kpis.supplierDuesInr.greaterThan(0) ? formatInr(kpis.supplierDuesInr) : "—"}
+          </div>
+          <div className="mt-1 flex flex-wrap gap-1 text-xs">
+            {kpis.suppliersWithDues > 0 ? (
+              <Link href="/suppliers" className="text-neutral-500 hover:underline">
+                {kpis.suppliersWithDues} supplier{kpis.suppliersWithDues > 1 ? "s" : ""} owed
+              </Link>
+            ) : (
+              <span className="text-neutral-500">All settled</span>
             )}
           </div>
         </Card>

@@ -89,12 +89,51 @@ model Item {
 }
 
 // -----------------------------------------------------------------------------
+// Suppliers (India side) — purchases come in via shipments; payments are in INR
+// -----------------------------------------------------------------------------
+
+model Supplier {
+  id            String   @id @default(cuid())
+  name          String
+  contactPerson String?
+  phone         String?
+  email         String?
+  address       String?
+  notes         String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shipments Shipment[]
+  payments  SupplierPayment[]
+
+  @@index([name])
+}
+
+// A payment made TO a supplier, in INR. Outstanding = goods purchased − payments.
+model SupplierPayment {
+  id         String   @id @default(cuid())
+  supplierId String
+  amountInr  Decimal
+  paidAt     DateTime
+  method     String?  // CASH | BANK_TRANSFER | UPI | CHEQUE | OTHER
+  reference  String?
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId, paidAt])
+}
+
+// -----------------------------------------------------------------------------
 // Shipments (imports from India)
 // -----------------------------------------------------------------------------
 
 model Shipment {
   id                       String   @id @default(cuid())
   reference                String   @unique
+  supplierId               String?  // the supplier this purchase is from (India side)
   shippedAt                DateTime
   arrivedAt                DateTime?
   fxRateInrToAed           Decimal  // e.g. 0.0445
@@ -104,9 +143,11 @@ model Shipment {
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 
-  lines ShipmentLine[]
+  supplier Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  lines    ShipmentLine[]
 
   @@index([arrivedAt])
+  @@index([supplierId])
 }
 
 model ShipmentLine {

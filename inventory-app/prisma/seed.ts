@@ -135,6 +135,17 @@ async function seedSampleData() {
   ]);
   console.log(`  · ${items.length} items`);
 
+  // Supplier (India side)
+  const supplier = await prisma.supplier.create({
+    data: {
+      name: "Rajesh Exports",
+      contactPerson: "Rajesh Kumar",
+      phone: "+91 98200 11223",
+      email: "rajesh@example.in",
+      address: "Mumbai, India",
+    },
+  });
+
   // Shipment from India: 50 scarves @ ₹200, 5 lamps @ ₹2500, 30 tea boxes @ ₹150
   // Total shipping ₹3000, FX 0.045, EQUAL_PER_UNIT
   const fxRate = d("0.045");
@@ -145,6 +156,7 @@ async function seedSampleData() {
   const shipment = await prisma.shipment.create({
     data: {
       reference: "SAMPLE-SH-001",
+      supplierId: supplier.id,
       shippedAt: daysAgo(20),
       arrivedAt: daysAgo(10),
       fxRateInrToAed: fxRate,
@@ -153,6 +165,19 @@ async function seedSampleData() {
       notes: "Sample shipment from Mumbai",
     },
   });
+
+  // Goods cost = 50×200 + 5×2500 + 30×150 = ₹27,000. Pay ₹15,000 → ₹12,000 still owed.
+  await prisma.supplierPayment.create({
+    data: {
+      supplierId: supplier.id,
+      amountInr: d(15000),
+      paidAt: daysAgo(15),
+      method: "BANK_TRANSFER",
+      reference: "UTR-SAMPLE-001",
+      notes: "Part payment",
+    },
+  });
+  console.log("  · 1 supplier (Rajesh Exports) with ₹12,000 outstanding");
 
   const lineSpecs = [
     { itemId: items[0].id, qty: 50, unitPriceInr: d(200) },

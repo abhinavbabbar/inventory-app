@@ -14,6 +14,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", resource: "dashboard" },
   { href: "/inventory", label: "Inventory", resource: "items" },
   { href: "/shipments", label: "Shipments", resource: "shipments" },
+  { href: "/suppliers", label: "Suppliers", resource: "suppliers" },
   { href: "/leads", label: "Leads", resource: "leads" },
   { href: "/orders", label: "Orders", resource: "orders" },
   { href: "/sales", label: "Sales", resource: "sales" },

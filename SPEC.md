@@ -53,7 +53,12 @@ Partner           id, userId (FK), investmentAed (Decimal — denormalized runni
 PartnerInvestment id, partnerId (FK), amountAed (Decimal), contributedAt, notes, createdAt
                   -- one dated row per capital contribution (top-up); Partner.investmentAed = sum(amountAed)
 Item              id, sku (unique), name, category, unit, reorderThreshold, photoUrl, isActive
-Shipment          id, reference, shippedAt, arrivedAt, fxRateInrToAed (Decimal), totalShippingInr (Decimal),
+Supplier          id, name, contactPerson, phone, email, address, notes, isActive, createdAt
+                  -- India-side supplier. Purchased (INR) = goods cost across their shipments.
+SupplierPayment   id, supplierId (FK), amountInr (Decimal), paidAt, method, reference, notes
+                  -- payments made TO the supplier; outstanding = purchased − paid (INR)
+Shipment          id, reference, supplierId (FK, nullable), shippedAt, arrivedAt, fxRateInrToAed (Decimal),
+                  totalShippingInr (Decimal),
                   shippingAllocationMethod (EQUAL_PER_UNIT|WEIGHTED_BY_VALUE|MANUAL), notes
 ShipmentLine      id, shipmentId (FK), itemId (FK), quantity, unitPurchasePriceInr (Decimal),
                   manualShippingInr (Decimal, nullable), allocatedShippingInr (computed on save),

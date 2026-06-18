@@ -27,6 +27,11 @@ const shipmentLineSchema = z.object({
 
 const shipmentSchema = z.object({
   reference: z.string().trim().min(1).max(64),
+  supplierId: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v == null || v.length === 0 ? null : v)),
   shippedAt: z.coerce.date(),
   arrivedAt: z
     .union([z.coerce.date(), z.literal("").transform(() => null), z.null()])
@@ -66,6 +71,7 @@ export async function createShipment(
 
   const parsed = shipmentSchema.safeParse({
     reference: formData.get("reference"),
+    supplierId: formData.get("supplierId"),
     shippedAt: formData.get("shippedAt"),
     arrivedAt: formData.get("arrivedAt"),
     fxRateInrToAed: formData.get("fxRateInrToAed"),
@@ -127,6 +133,7 @@ export async function createShipment(
     const shipment = await tx.shipment.create({
       data: {
         reference: data.reference,
+        supplierId: data.supplierId,
         shippedAt: data.shippedAt,
         arrivedAt: data.arrivedAt,
         fxRateInrToAed: fxRate,
@@ -176,7 +183,27 @@ export async function createShipment(
 
   revalidatePath("/shipments");
   revalidatePath("/inventory");
+  revalidatePath("/suppliers");
+  revalidatePath("/dashboard");
   redirect(`/shipments/${result.id}`);
+}
+
+// Attribute (or re-attribute) an existing shipment to a supplier.
+export async function setShipmentSupplier(
+  shipmentId: string,
+  formData: FormData,
+): Promise<void> {
+  const session = await auth();
+  if (!session?.user || !can(session.user, "shipments", "edit")) {
+    throw new Error("Forbidden");
+  }
+  const raw = formData.get("supplierId");
+  const supplierId = typeof raw === "string" && raw.length > 0 ? raw : null;
+  await prisma.shipment.update({ where: { id: shipmentId }, data: { supplierId } });
+  revalidatePath(`/shipments/${shipmentId}`);
+  revalidatePath("/shipments");
+  revalidatePath("/suppliers");
+  revalidatePath("/dashboard");
 }
 
 function fieldErrors(error: z.ZodError): ShipmentFormState {

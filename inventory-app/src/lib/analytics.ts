@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { d, sumDecimal } from "@/lib/money";
 import { getStockSummariesForItems, stockStatus } from "@/lib/items";
+import { getSupplierDuesSummary } from "@/lib/suppliers";
 
 export type Kpis = {
   totalInvestedAed: Prisma.Decimal;
@@ -16,6 +17,8 @@ export type Kpis = {
   inProgressOrdersCount: number;
   inProgressOrdersValueAed: Prisma.Decimal;
   pendingAdvanceCount: number;
+  supplierDuesInr: Prisma.Decimal;
+  suppliersWithDues: number;
 };
 
 function startOfMonth(date: Date): Date {
@@ -105,6 +108,9 @@ export async function getKpis(): Promise<Kpis> {
     }
   }
 
+  // Supplier dues (INR)
+  const dues = await getSupplierDuesSummary();
+
   return {
     totalInvestedAed,
     inventoryValueAed,
@@ -118,6 +124,8 @@ export async function getKpis(): Promise<Kpis> {
     inProgressOrdersCount: inProgressOrders.length,
     inProgressOrdersValueAed,
     pendingAdvanceCount,
+    supplierDuesInr: dues.totalOutstandingInr,
+    suppliersWithDues: dues.suppliersWithDues,
   };
 }
 

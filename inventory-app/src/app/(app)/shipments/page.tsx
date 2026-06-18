@@ -30,6 +30,7 @@ export default async function ShipmentsPage() {
     orderBy: { shippedAt: "desc" },
     include: {
       lines: { select: { quantity: true, landedCostAed: true } },
+      supplier: { select: { id: true, name: true } },
     },
   });
 
@@ -53,6 +54,7 @@ export default async function ShipmentsPage() {
             <THead>
               <TR>
                 <TH>Reference</TH>
+                <TH>Supplier</TH>
                 <TH>Shipped</TH>
                 <TH>Method</TH>
                 <TH className="text-right">Lines</TH>
@@ -73,6 +75,15 @@ export default async function ShipmentsPage() {
                       <Link href={`/shipments/${s.id}`} className="hover:underline">
                         {s.reference}
                       </Link>
+                    </TD>
+                    <TD>
+                      {s.supplier ? (
+                        <Link href={`/suppliers/${s.supplier.id}`} className="hover:underline">
+                          {s.supplier.name}
+                        </Link>
+                      ) : (
+                        <span className="text-neutral-400">—</span>
+                      )}
                     </TD>
                     <TD className="text-neutral-600 dark:text-neutral-400">
                       {dateFmt.format(s.shippedAt)}

@@ -5,11 +5,18 @@ import { ShipmentForm } from "./_components/shipment-form";
 export const metadata = { title: "New shipment · Inventory & P&L" };
 
 export default async function NewShipmentPage() {
-  const items = await prisma.item.findMany({
-    where: { isActive: true },
-    orderBy: { name: "asc" },
-    select: { id: true, sku: true, name: true, unit: true },
-  });
+  const [items, suppliers] = await Promise.all([
+    prisma.item.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, sku: true, name: true, unit: true },
+    }),
+    prisma.supplier.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   if (items.length === 0) {
     return (
@@ -33,7 +40,7 @@ export default async function NewShipmentPage() {
         title="New shipment"
         description="Imports from India. Stock is added when you submit."
       />
-      <ShipmentForm items={items} />
+      <ShipmentForm items={items} suppliers={suppliers} />
     </div>
   );
 }
