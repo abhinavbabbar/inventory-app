@@ -1,4 +1,4 @@
-import { Document, Page, View, Text, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import { Prisma } from "@prisma/client";
 import { sumDecimal } from "@/lib/money";
 
@@ -8,6 +8,7 @@ const styles = StyleSheet.create({
   spaceBetween: { flexDirection: "row", justifyContent: "space-between" },
   hr: { borderBottomWidth: 1, borderColor: "#e5e7eb", marginVertical: 12 },
 
+  logo: { maxWidth: 150, maxHeight: 56, objectFit: "contain", marginBottom: 8 },
   companyName: { fontSize: 18, fontWeight: 700 },
   muted: { color: "#6b7280" },
   invoiceTitle: { fontSize: 22, fontWeight: 700, textAlign: "right" },
@@ -88,6 +89,9 @@ export function InvoiceDocument({ data }: { data: InvoicePdfInput }) {
   );
   const total = subtotal.add(data.sale.vatAmountAed);
   const hasVat = !data.sale.vatRatePct.isZero();
+  // Only embed a logo we can render safely (uploaded data URL or remote image).
+  const logo = data.company.logoUrl?.trim() ?? "";
+  const showLogo = logo.startsWith("data:image/") || /^https?:\/\//i.test(logo);
 
   return (
     <Document>
@@ -95,6 +99,7 @@ export function InvoiceDocument({ data }: { data: InvoicePdfInput }) {
         {/* Header */}
         <View style={styles.spaceBetween}>
           <View>
+            {showLogo && <Image src={logo} style={styles.logo} />}
             <Text style={styles.companyName}>{data.company.name}</Text>
             {data.company.address && (
               <Text style={[styles.muted, { marginTop: 4 }]}>{data.company.address}</Text>

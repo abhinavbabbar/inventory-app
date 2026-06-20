@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { Button, Card, Input, Label, Textarea } from "@/components/ui";
+import { ImageUpload } from "@/components/image-upload";
 import { saveCompanyInfo, type SettingsFormState } from "../actions";
 
 type Props = {
@@ -34,9 +35,16 @@ export function CompanyInfoForm({ defaultValues, readOnly }: Props) {
             <Label htmlFor="trn">TRN / Tax ID</Label>
             <Input id="trn" name="trn" defaultValue={defaultValues.trn} maxLength={64} />
           </div>
-          <div>
-            <Label htmlFor="logoUrl">Logo URL <span className="text-neutral-400 font-normal">(optional)</span></Label>
-            <Input id="logoUrl" name="logoUrl" defaultValue={defaultValues.logoUrl} maxLength={500} placeholder="https://…" />
+          <div className="md:col-span-2">
+            <ImageUpload
+              name="logoUrl"
+              label="Brand logo"
+              defaultValue={defaultValues.logoUrl}
+              maxDim={400}
+              format="image/png"
+              shape="square"
+              helpText="Printed on every invoice/receipt. PNG with a transparent background works best."
+            />
           </div>
         </fieldset>
 

@@ -82,6 +82,17 @@ export default async function ItemDetailPage({
         </div>
       )}
 
+      {item.photoUrl && (
+        <Card className="p-3 inline-block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={item.photoUrl}
+            alt={item.name}
+            className="max-h-56 rounded-md object-contain"
+          />
+        </Card>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card className="p-4">
           <div className="text-xs text-neutral-500">Current stock</div>

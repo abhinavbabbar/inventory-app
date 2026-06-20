@@ -19,10 +19,12 @@ const itemSchema = z.object({
     .nullable(),
   unit: z.string().trim().min(1).max(16).default("pc"),
   reorderThreshold: z.coerce.number().int().min(0).default(0),
+  // Either an external URL or an uploaded image stored as a data URL — the
+  // latter can be ~hundreds of KB, so allow a generous length.
   photoUrl: z
     .string()
     .trim()
-    .max(500)
+    .max(1_500_000)
     .transform((v) => (v.length === 0 ? null : v))
     .nullable(),
 });

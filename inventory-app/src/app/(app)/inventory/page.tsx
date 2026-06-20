@@ -204,7 +204,15 @@ export default async function InventoryPage({
                       </Link>
                     </TD>
                     <TD>
-                      <Link href={`/inventory/${item.id}`} className="hover:underline">
+                      <Link href={`/inventory/${item.id}`} className="hover:underline inline-flex items-center gap-2">
+                        {item.photoUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.photoUrl}
+                            alt=""
+                            className="h-8 w-8 rounded object-cover border border-neutral-200 dark:border-neutral-800"
+                          />
+                        )}
                         {item.name}
                       </Link>
                     </TD>

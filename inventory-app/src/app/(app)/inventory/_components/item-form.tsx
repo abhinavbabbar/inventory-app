@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { LinkButton, Button, Input, Label, Card } from "@/components/ui";
+import { ImageUpload } from "@/components/image-upload";
 import type { ItemFormState } from "../actions";
 
 type ItemFormProps = {
@@ -68,15 +69,15 @@ export function ItemForm({ defaultValues, action, submitLabel, cancelHref }: Ite
             />
             <p className="text-xs text-neutral-500 mt-1">Stock at or below this triggers a Shortage status.</p>
           </div>
-          <div>
-            <Label htmlFor="photoUrl">Photo URL <span className="text-neutral-400 font-normal">(optional)</span></Label>
-            <Input
-              id="photoUrl"
+          <div className="md:col-span-2">
+            <ImageUpload
               name="photoUrl"
-              type="url"
-              defaultValue={defaultValues?.photoUrl ?? ""}
-              maxLength={500}
-              placeholder="https://…"
+              label="Item photo"
+              defaultValue={defaultValues?.photoUrl}
+              maxDim={600}
+              format="image/jpeg"
+              shape="wide"
+              helpText="Shown on the item page. Resized automatically before saving."
             />
           </div>
         </div>

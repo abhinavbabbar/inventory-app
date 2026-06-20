@@ -28,6 +28,19 @@ export default async function SalesPage() {
     },
   });
 
+  // Aggregate totals across all sales, keeping VAT separate.
+  let totSubtotal = new Prisma.Decimal(0);
+  let totVat = new Prisma.Decimal(0);
+  let totGross = new Prisma.Decimal(0);
+  for (const s of sales) {
+    const sub = sumDecimal(s.lines.map((l) => (l.unitSalePriceAed as Prisma.Decimal).mul(l.quantity)));
+    const cogs = sumDecimal(s.lines.map((l) => (l.unitCostAedSnapshot as Prisma.Decimal).mul(l.quantity)));
+    totSubtotal = totSubtotal.add(sub);
+    totVat = totVat.add(s.vatAmountAed as Prisma.Decimal);
+    totGross = totGross.add(sub.sub(cogs));
+  }
+  const totTotal = totSubtotal.add(totVat);
+
   return (
     <div>
       <PageHeader
@@ -109,6 +122,24 @@ export default async function SalesPage() {
                 );
               })}
             </tbody>
+            <tfoot className="bg-neutral-50 dark:bg-neutral-900/50 font-medium">
+              <TR>
+                <TD>Totals</TD>
+                <TD />
+                <TD />
+                <TD className="text-right text-xs text-neutral-500">{sales.length} sale{sales.length === 1 ? "" : "s"}</TD>
+                <TD className="text-right tabular-nums">{formatAed(totSubtotal)}</TD>
+                <TD className="text-right tabular-nums">{formatAed(totVat)}</TD>
+                <TD className="text-right tabular-nums font-semibold">{formatAed(totTotal)}</TD>
+                <TD
+                  className={`text-right tabular-nums ${
+                    totGross.isNegative() ? "text-red-600" : "text-green-700 dark:text-green-400"
+                  }`}
+                >
+                  {formatAed(totGross)}
+                </TD>
+              </TR>
+            </tfoot>
           </Table>
         </Card>
       )}

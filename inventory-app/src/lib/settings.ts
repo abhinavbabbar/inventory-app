@@ -16,8 +16,9 @@ export type CompanyInfo = {
 
 const defaults = {
   vat: {
-    enabled: false,
-    defaultRatePct: "0",
+    // UAE standard VAT is 5% — on by default; editable per sale and in Settings.
+    enabled: true,
+    defaultRatePct: "5",
     label: "VAT",
     registrationNumber: null,
   } as VatSettings,

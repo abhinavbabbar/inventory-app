@@ -12,7 +12,8 @@ const companyInfoSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
   address: z.string().trim().max(500).optional().transform((v) => v ?? ""),
   trn: z.string().trim().max(64).optional().transform((v) => v ?? ""),
-  logoUrl: z.string().trim().max(500).optional().transform((v) => v ?? ""),
+  // External URL or an uploaded logo stored as a data URL (can be large).
+  logoUrl: z.string().trim().max(1_500_000).optional().transform((v) => v ?? ""),
 });
 
 const vatSchema = z.object({
