@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { formatAed, sumDecimal } from "@/lib/money";
-import { OPEX_CATEGORIES, type OpexCategory } from "@/lib/domain";
+import { OPEX_CATEGORIES, OPEX_CATEGORY_LABELS, type OpexCategory } from "@/lib/domain";
 import {
   Card,
   EmptyState,
@@ -20,14 +20,7 @@ export const metadata = { title: "Opex · Inventory & P&L" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 
-const categoryLabels: Record<OpexCategory, string> = {
-  RENT: "Rent",
-  SALARY: "Salary",
-  UTILITY: "Utility",
-  TRANSPORT: "Transport",
-  MARKETING: "Marketing",
-  OTHER: "Other",
-};
+const categoryLabels = OPEX_CATEGORY_LABELS;
 
 type SearchParams = { month?: string; category?: OpexCategory | "ALL" };
 

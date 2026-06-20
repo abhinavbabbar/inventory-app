@@ -20,9 +20,20 @@ export const OPEX_CATEGORIES = [
   "UTILITY",
   "TRANSPORT",
   "MARKETING",
+  "PURCHASE",
   "OTHER",
 ] as const;
 export type OpexCategory = (typeof OPEX_CATEGORIES)[number];
+
+export const OPEX_CATEGORY_LABELS: Record<OpexCategory, string> = {
+  RENT: "Rent",
+  SALARY: "Salary",
+  UTILITY: "Utility",
+  TRANSPORT: "Transport",
+  MARKETING: "Marketing",
+  PURCHASE: "Item purchase",
+  OTHER: "Other",
+};
 
 export const LEAD_STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
 export type LeadStatus = (typeof LEAD_STATUSES)[number];

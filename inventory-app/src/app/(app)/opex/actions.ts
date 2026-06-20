@@ -18,6 +18,13 @@ const decimalString = z
 
 const opexSchema = z.object({
   category: z.enum(OPEX_CATEGORIES),
+  // Free-text label used only when category === "OTHER".
+  categoryOther: z
+    .string()
+    .trim()
+    .max(40)
+    .optional()
+    .transform((v) => (v == null || v.length === 0 ? null : v)),
   amountAed: decimalString,
   incurredAt: z.coerce.date(),
   paidByPartnerId: z
@@ -32,6 +39,19 @@ const opexSchema = z.object({
     .optional()
     .transform((v) => (v == null || v.length === 0 ? null : v)),
 });
+
+// Resolve the value stored in OpexEntry.category: a custom label when the user
+// picked "Other" and typed one, otherwise the enum value.
+function opexDataFrom(d: z.infer<typeof opexSchema>) {
+  const category = d.category === "OTHER" && d.categoryOther ? d.categoryOther : d.category;
+  return {
+    category,
+    amountAed: d.amountAed,
+    incurredAt: d.incurredAt,
+    paidByPartnerId: d.paidByPartnerId,
+    notes: d.notes,
+  };
+}
 
 export type OpexFormState = {
   errors?: Partial<Record<keyof z.infer<typeof opexSchema>, string>>;
@@ -59,7 +79,7 @@ export async function createOpex(
   const parsed = opexSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fieldErrors(parsed.error);
 
-  await prisma.opexEntry.create({ data: parsed.data });
+  await prisma.opexEntry.create({ data: opexDataFrom(parsed.data) });
   revalidateAll();
   redirect("/opex");
 }
@@ -73,7 +93,7 @@ export async function updateOpex(
   const parsed = opexSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fieldErrors(parsed.error);
 
-  await prisma.opexEntry.update({ where: { id }, data: parsed.data });
+  await prisma.opexEntry.update({ where: { id }, data: opexDataFrom(parsed.data) });
   revalidateAll();
   return { message: "Saved" };
 }

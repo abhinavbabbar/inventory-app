@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/ui";
 import { OpexForm } from "../_components/opex-form";
 import { DeleteOpexButton } from "../_components/delete-opex-button";
 import { updateOpex, deleteOpex } from "../actions";
-import type { OpexCategory } from "@/lib/domain";
 
 export const metadata = { title: "Edit opex · Inventory & P&L" };
 
@@ -40,7 +39,7 @@ export default async function OpexDetailPage({
         submitLabel="Save changes"
         cancelHref="/opex"
         defaultValues={{
-          category: entry.category as OpexCategory,
+          category: entry.category,
           amountAed: (entry.amountAed as { toString: () => string }).toString(),
           incurredAt: entry.incurredAt.toISOString().slice(0, 10),
           paidByPartnerId: entry.paidByPartnerId,

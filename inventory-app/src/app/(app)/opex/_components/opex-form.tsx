@@ -1,24 +1,17 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button, Card, Input, Label, LinkButton, Select, Textarea } from "@/components/ui";
-import { OPEX_CATEGORIES, type OpexCategory } from "@/lib/domain";
+import { OPEX_CATEGORIES, OPEX_CATEGORY_LABELS } from "@/lib/domain";
 import type { OpexFormState } from "../actions";
 
-const categoryLabels: Record<OpexCategory, string> = {
-  RENT: "Rent",
-  SALARY: "Salary",
-  UTILITY: "Utility",
-  TRANSPORT: "Transport",
-  MARKETING: "Marketing",
-  OTHER: "Other",
-};
+const KNOWN = OPEX_CATEGORIES as readonly string[];
 
 type PartnerOption = { id: string; name: string };
 
 type Props = {
   defaultValues?: {
-    category?: OpexCategory;
+    category?: string; // an enum value, or a free-text label stored as "Other"
     amountAed?: string;
     incurredAt?: string; // YYYY-MM-DD
     paidByPartnerId?: string | null;
@@ -35,19 +28,48 @@ export function OpexForm({ defaultValues, partners, action, submitLabel, cancelH
   const [state, formAction, pending] = useActionState<OpexFormState, FormData>(action, {});
   const today = new Date().toISOString().slice(0, 10);
 
+  // A stored category that isn't one of the known enum values is a custom
+  // "Other" label — preselect Other and pre-fill the text box with it.
+  const stored = defaultValues?.category;
+  const storedIsCustom = !!stored && !KNOWN.includes(stored);
+  const [category, setCategory] = useState<string>(
+    stored ? (storedIsCustom ? "OTHER" : stored) : "RENT",
+  );
+  const [otherText, setOtherText] = useState(storedIsCustom ? stored! : "");
+
   return (
     <form action={formAction}>
       <Card className="p-6 space-y-4 max-w-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="category">Category</Label>
-            <Select id="category" name="category" defaultValue={defaultValues?.category ?? "RENT"} required>
+            <Select
+              id="category"
+              name="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+            >
               {OPEX_CATEGORIES.map((c) => (
                 <option key={c} value={c}>
-                  {categoryLabels[c]}
+                  {OPEX_CATEGORY_LABELS[c]}
                 </option>
               ))}
             </Select>
+            {category === "OTHER" && (
+              <div className="mt-2">
+                <Input
+                  name="categoryOther"
+                  value={otherText}
+                  onChange={(e) => setOtherText(e.target.value)}
+                  maxLength={40}
+                  placeholder="Specify category (e.g. Packaging, Bank fees)"
+                />
+                <p className="text-xs text-neutral-500 mt-1">
+                  Optional — leave blank to just record it as &quot;Other&quot;.
+                </p>
+              </div>
+            )}
             {state.errors?.category && <p className="text-xs text-red-600 mt-1">{state.errors.category}</p>}
           </div>
           <div>
