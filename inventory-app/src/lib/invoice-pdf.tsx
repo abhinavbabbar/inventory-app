@@ -55,6 +55,7 @@ export type InvoicePdfInput = {
   company: {
     name: string;
     tagline: string;
+    phone: string;
     address: string;
     trn: string;
     logoUrl: string;
@@ -108,6 +109,9 @@ export function InvoiceDocument({ data }: { data: InvoicePdfInput }) {
             ) : null}
             {data.company.address && (
               <Text style={[styles.muted, { marginTop: 4 }]}>{data.company.address}</Text>
+            )}
+            {data.company.phone && (
+              <Text style={[styles.muted, { marginTop: 2 }]}>Tel: {data.company.phone}</Text>
             )}
             {data.vat.registrationNumber && (
               <Text style={[styles.muted, { marginTop: 2 }]}>

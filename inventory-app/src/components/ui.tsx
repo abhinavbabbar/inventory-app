@@ -14,11 +14,11 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const buttonVariants = {
   primary:
-    "bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200",
+    "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm hover:from-indigo-700 hover:to-violet-700 dark:from-indigo-500 dark:to-violet-500 dark:hover:from-indigo-400 dark:hover:to-violet-400",
   secondary:
-    "bg-white text-neutral-900 border border-neutral-300 hover:bg-neutral-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800",
+    "bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:border-indigo-900/60 dark:hover:bg-indigo-950/40",
   ghost:
-    "text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800",
+    "text-neutral-700 hover:bg-indigo-50 hover:text-indigo-700 dark:text-neutral-300 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-300",
   danger:
     "bg-red-600 text-white hover:bg-red-700",
 };
@@ -91,7 +91,7 @@ export const Label = forwardRef<HTMLLabelElement, LabelHTMLAttributes<HTMLLabelE
 );
 
 const inputBase =
-  "w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100";
+  "w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className, ...rest }, ref) {
@@ -168,7 +168,9 @@ export function PageHeader({
   return (
     <header className="mb-6 flex items-start justify-between gap-4 flex-wrap">
       <div className="min-w-0">
-        <h1 className="text-2xl font-semibold">{title}</h1>
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-600 dark:from-indigo-400 dark:via-violet-400 dark:to-cyan-400 bg-clip-text text-transparent">
+          {title}
+        </h1>
         {description != null && (
           <div className="text-sm text-neutral-500 mt-1">{description}</div>
         )}
@@ -195,7 +197,7 @@ export function Table({ children, className }: { children: React.ReactNode; clas
 
 export function THead({ children }: { children: React.ReactNode }) {
   return (
-    <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-600 dark:text-neutral-400 text-xs uppercase tracking-wide">
+    <thead className="bg-indigo-50/70 dark:bg-indigo-950/30 text-indigo-700/80 dark:text-indigo-300/80 text-xs uppercase tracking-wide">
       {children}
     </thead>
   );

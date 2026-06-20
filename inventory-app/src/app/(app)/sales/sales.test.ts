@@ -153,6 +153,7 @@ describe("invoice PDF rendering", () => {
       company: {
         name: "Acme Trading FZE",
         tagline: "",
+        phone: "",
         address: "Dubai, UAE",
         trn: "100123456700003",
         logoUrl: "",
@@ -189,7 +190,7 @@ describe("invoice PDF rendering", () => {
 
   it("renders for a walk-in customer with no VAT", async () => {
     const buffer = await renderInvoicePdf({
-      company: { name: "Acme", tagline: "", address: "", trn: "", logoUrl: "" },
+      company: { name: "Acme", tagline: "", phone: "", address: "", trn: "", logoUrl: "" },
       vat: { label: "VAT", registrationNumber: null },
       sale: {
         invoiceNumber: "INV-TEST-002",

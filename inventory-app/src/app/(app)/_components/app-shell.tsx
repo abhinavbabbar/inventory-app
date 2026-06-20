@@ -34,7 +34,7 @@ export function AppShell({ role, permissions, userName, signOutAction, children 
   }, [open]);
 
   return (
-    <div className="min-h-screen md:flex">
+    <div className="min-h-screen md:flex bg-gradient-to-br from-indigo-50/40 via-white to-cyan-50/30 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950">
       {/* Mobile overlay */}
       {open && (
         <button
@@ -55,7 +55,7 @@ export function AppShell({ role, permissions, userName, signOutAction, children 
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 sticky top-0 z-20 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 sm:px-6 flex items-center justify-between gap-3">
+        <header className="h-14 sticky top-0 z-20 border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 backdrop-blur px-4 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
@@ -73,11 +73,13 @@ export function AppShell({ role, permissions, userName, signOutAction, children 
             <div className="text-sm text-neutral-500 min-w-0 hidden sm:block">
               Signed in as{" "}
               <span className="font-medium text-neutral-900 dark:text-neutral-100">{userName}</span>{" "}
-              <span className="ml-2 inline-flex items-center rounded-full bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 text-xs">
+              <span className="ml-2 inline-flex items-center rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 px-2 py-0.5 text-xs font-medium">
                 {role}
               </span>
             </div>
-            <div className="text-sm font-medium sm:hidden">Inventory & P&L</div>
+            <div className="text-sm font-bold sm:hidden bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">
+              Inventory &amp; P&amp;L
+            </div>
           </div>
           <form action={signOutAction}>
             <button

@@ -10,6 +10,7 @@ export type VatSettings = {
 export type CompanyInfo = {
   name: string;
   tagline: string;
+  phone: string;
   address: string;
   trn: string;
   logoUrl: string;
@@ -26,6 +27,7 @@ const defaults = {
   companyInfo: {
     name: "Your Company",
     tagline: "",
+    phone: "",
     address: "",
     trn: "",
     logoUrl: "",
@@ -58,6 +60,7 @@ export async function getCompanyInfo(): Promise<CompanyInfo> {
   return {
     name: value.name ?? defaults.companyInfo.name,
     tagline: value.tagline ?? defaults.companyInfo.tagline,
+    phone: value.phone ?? defaults.companyInfo.phone,
     address: value.address ?? defaults.companyInfo.address,
     trn: value.trn ?? defaults.companyInfo.trn,
     logoUrl: value.logoUrl ?? defaults.companyInfo.logoUrl,

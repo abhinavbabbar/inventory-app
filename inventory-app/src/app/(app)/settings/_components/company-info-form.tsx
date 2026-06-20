@@ -6,7 +6,7 @@ import { ImageUpload } from "@/components/image-upload";
 import { saveCompanyInfo, type SettingsFormState } from "../actions";
 
 type Props = {
-  defaultValues: { name: string; tagline: string; address: string; trn: string; logoUrl: string };
+  defaultValues: { name: string; tagline: string; phone: string; address: string; trn: string; logoUrl: string };
   readOnly?: boolean;
 };
 
@@ -43,6 +43,18 @@ export function CompanyInfoForm({ defaultValues, readOnly }: Props) {
           <div className="md:col-span-2">
             <Label htmlFor="address">Address</Label>
             <Textarea id="address" name="address" defaultValue={defaultValues.address} maxLength={500} />
+          </div>
+          <div>
+            <Label htmlFor="phone">Mobile / phone</Label>
+            <Input
+              id="phone"
+              name="phone"
+              type="tel"
+              defaultValue={defaultValues.phone}
+              maxLength={40}
+              placeholder="+971 50 123 4567"
+            />
+            <p className="text-xs text-neutral-500 mt-1">Shown on receipts so customers can reach you.</p>
           </div>
           <div>
             <Label htmlFor="trn">TRN / Tax ID</Label>

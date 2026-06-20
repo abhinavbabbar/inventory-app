@@ -11,6 +11,7 @@ import { refreshCbuaeRate } from "@/lib/fx";
 const companyInfoSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
   tagline: z.string().trim().max(120).optional().transform((v) => v ?? ""),
+  phone: z.string().trim().max(40).optional().transform((v) => v ?? ""),
   address: z.string().trim().max(500).optional().transform((v) => v ?? ""),
   trn: z.string().trim().max(64).optional().transform((v) => v ?? ""),
   // External URL or an uploaded logo stored as a data URL (can be large).
