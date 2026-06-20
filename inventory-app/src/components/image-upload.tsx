@@ -18,6 +18,8 @@ type Props = {
   quality?: number;
   /** Square preview (logos) vs wide (photos). */
   shape?: "square" | "wide";
+  /** Also allow pasting an external image URL instead of uploading a file. */
+  allowUrl?: boolean;
   helpText?: string;
 };
 
@@ -70,6 +72,7 @@ export function ImageUpload({
   format = "image/jpeg",
   quality = 0.82,
   shape = "wide",
+  allowUrl = false,
   helpText,
 }: Props) {
   const [value, setValue] = useState<string>(defaultValue ?? "");
@@ -157,6 +160,16 @@ export function ImageUpload({
               </button>
             )}
           </div>
+          {allowUrl && (
+            <input
+              type="url"
+              inputMode="url"
+              placeholder="or paste an image URL (https://…)"
+              value={value.startsWith("data:") ? "" : value}
+              onChange={(e) => setValue(e.target.value.trim())}
+              className="h-9 w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 text-sm"
+            />
+          )}
           {helpText && <p className="text-xs text-neutral-500">{helpText}</p>}
           {error && <p className="text-xs text-red-600">{error}</p>}
         </div>

@@ -77,7 +77,8 @@ export function ItemForm({ defaultValues, action, submitLabel, cancelHref }: Ite
               maxDim={600}
               format="image/jpeg"
               shape="wide"
-              helpText="Shown on the item page. Resized automatically before saving."
+              allowUrl
+              helpText="Upload a file or paste an image URL. Shown on the item page; resized automatically before saving."
             />
           </div>
         </div>

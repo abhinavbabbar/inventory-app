@@ -43,7 +43,8 @@ export function CompanyInfoForm({ defaultValues, readOnly }: Props) {
               maxDim={400}
               format="image/png"
               shape="square"
-              helpText="Printed on every invoice/receipt. PNG with a transparent background works best."
+              allowUrl
+              helpText="Upload a file or paste an image URL. Printed on every invoice/receipt; PNG with a transparent background works best."
             />
           </div>
         </fieldset>
