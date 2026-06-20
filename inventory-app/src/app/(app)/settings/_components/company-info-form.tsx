@@ -6,7 +6,7 @@ import { ImageUpload } from "@/components/image-upload";
 import { saveCompanyInfo, type SettingsFormState } from "../actions";
 
 type Props = {
-  defaultValues: { name: string; address: string; trn: string; logoUrl: string };
+  defaultValues: { name: string; tagline: string; address: string; trn: string; logoUrl: string };
   readOnly?: boolean;
 };
 
@@ -26,6 +26,19 @@ export function CompanyInfoForm({ defaultValues, readOnly }: Props) {
             <Label htmlFor="name">Company name</Label>
             <Input id="name" name="name" defaultValue={defaultValues.name} required maxLength={200} />
             {state.errors?.name && <p className="text-xs text-red-600 mt-1">{state.errors.name}</p>}
+          </div>
+          <div className="md:col-span-2">
+            <Label htmlFor="tagline">
+              Tagline <span className="text-neutral-400 font-normal">(optional)</span>
+            </Label>
+            <Input
+              id="tagline"
+              name="tagline"
+              defaultValue={defaultValues.tagline}
+              maxLength={120}
+              placeholder="e.g. Handcrafted in India · Delivered in the UAE"
+            />
+            <p className="text-xs text-neutral-500 mt-1">Shown under your brand name on every receipt.</p>
           </div>
           <div className="md:col-span-2">
             <Label htmlFor="address">Address</Label>
@@ -51,13 +64,24 @@ export function CompanyInfoForm({ defaultValues, readOnly }: Props) {
 
         {state.message && <p className="text-sm text-green-600">{state.message}</p>}
 
-        {!readOnly && (
-          <div className="flex items-center justify-end pt-2 border-t border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+          <a
+            href="/settings/receipt-preview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-neutral-600 dark:text-neutral-300 hover:underline"
+          >
+            Preview receipt ↗
+          </a>
+          {!readOnly && (
             <Button type="submit" disabled={pending}>
               {pending ? "Saving…" : "Save company info"}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
+        <p className="text-xs text-neutral-400">
+          Preview opens a sample receipt using your saved branding — save first to see changes.
+        </p>
       </Card>
     </form>
   );

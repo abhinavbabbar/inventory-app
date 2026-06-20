@@ -10,6 +10,7 @@ const styles = StyleSheet.create({
 
   logo: { maxWidth: 150, maxHeight: 56, objectFit: "contain", marginBottom: 8 },
   companyName: { fontSize: 18, fontWeight: 700 },
+  tagline: { fontSize: 9, color: "#6b7280", fontStyle: "italic", marginTop: 2 },
   muted: { color: "#6b7280" },
   invoiceTitle: { fontSize: 22, fontWeight: 700, textAlign: "right" },
   label: { fontSize: 8, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.5 },
@@ -53,6 +54,7 @@ const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "long" });
 export type InvoicePdfInput = {
   company: {
     name: string;
+    tagline: string;
     address: string;
     trn: string;
     logoUrl: string;
@@ -101,6 +103,9 @@ export function InvoiceDocument({ data }: { data: InvoicePdfInput }) {
           <View>
             {showLogo && <Image src={logo} style={styles.logo} />}
             <Text style={styles.companyName}>{data.company.name}</Text>
+            {data.company.tagline ? (
+              <Text style={styles.tagline}>{data.company.tagline}</Text>
+            ) : null}
             {data.company.address && (
               <Text style={[styles.muted, { marginTop: 4 }]}>{data.company.address}</Text>
             )}

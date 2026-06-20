@@ -9,6 +9,7 @@ export type VatSettings = {
 
 export type CompanyInfo = {
   name: string;
+  tagline: string;
   address: string;
   trn: string;
   logoUrl: string;
@@ -24,6 +25,7 @@ const defaults = {
   } as VatSettings,
   companyInfo: {
     name: "Your Company",
+    tagline: "",
     address: "",
     trn: "",
     logoUrl: "",
@@ -55,6 +57,7 @@ export async function getCompanyInfo(): Promise<CompanyInfo> {
   const value = await readSetting<Partial<CompanyInfo>>("company_info", defaults.companyInfo);
   return {
     name: value.name ?? defaults.companyInfo.name,
+    tagline: value.tagline ?? defaults.companyInfo.tagline,
     address: value.address ?? defaults.companyInfo.address,
     trn: value.trn ?? defaults.companyInfo.trn,
     logoUrl: value.logoUrl ?? defaults.companyInfo.logoUrl,
