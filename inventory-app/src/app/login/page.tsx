@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { signIn } from "@/auth";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
@@ -29,18 +30,31 @@ async function authenticate(formData: FormData) {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; reset?: string }>;
 }) {
   const params = await searchParams;
   const hasError = params.error === "1";
+  const justReset = params.reset === "1";
+
+  const inputClass =
+    "w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-indigo-50/40 via-white to-cyan-50/30 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold">Inventory & P&L</h1>
+          <div className="mx-auto mb-3 h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-sm" />
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-600 dark:from-indigo-400 dark:via-violet-400 dark:to-cyan-400 bg-clip-text text-transparent">
+            Inventory &amp; P&amp;L
+          </h1>
           <p className="text-sm text-neutral-500 mt-1">Sign in to continue</p>
         </div>
+
+        {justReset && (
+          <div className="mb-4 rounded-md border border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-700 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200">
+            Your password has been reset. Sign in with your new password.
+          </div>
+        )}
 
         <form
           action={authenticate}
@@ -57,20 +71,25 @@ export default async function LoginPage({
               required
               autoComplete="email"
               defaultValue="admin@example.com"
-              className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
+              className={inputClass}
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="password" className="block text-sm font-medium">
+                Password
+              </label>
+              <Link href="/forgot-password" className="text-xs text-indigo-600 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="password"
               name="password"
               type="password"
               required
               autoComplete="current-password"
-              className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
+              className={inputClass}
             />
           </div>
           {hasError && (
@@ -78,7 +97,7 @@ export default async function LoginPage({
           )}
           <button
             type="submit"
-            className="w-full bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-md py-2 text-sm font-medium hover:opacity-90"
+            className="w-full rounded-md py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
           >
             Sign in
           </button>

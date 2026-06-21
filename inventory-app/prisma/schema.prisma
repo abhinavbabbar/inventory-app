@@ -30,8 +30,24 @@ model User {
 
   partner        Partner?
   assignedLeads  Lead[] @relation("LeadAssignee")
+  resetTokens    PasswordResetToken[]
 
   @@index([email])
+}
+
+// Single-use password reset tokens. Only the SHA-256 hash is stored; the raw
+// token travels in the emailed link. Expired/used tokens are rejected.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Partner {

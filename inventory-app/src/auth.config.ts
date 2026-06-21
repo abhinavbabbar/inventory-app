@@ -11,7 +11,7 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const publicPaths = ["/login"];
+      const publicPaths = ["/login", "/forgot-password", "/reset-password"];
       const isPublic = publicPaths.some((p) => nextUrl.pathname.startsWith(p));
 
       if (isPublic) {
