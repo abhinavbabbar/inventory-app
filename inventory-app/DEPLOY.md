@@ -80,6 +80,45 @@ Vercel deploys from the GitHub repo.
 4. **Settings → Company info / VAT / FX** → fill in your real details.
 5. Add partners and start entering data.
 
+## 4b. Optional integrations
+
+These are optional — the app runs without them. Add them in **Vercel → Project →
+Settings → Environment Variables** (Production, and Preview if you test there).
+
+### Email — for the "Forgot password?" flow
+
+Password reset links are emailed via [Resend](https://resend.com) (free tier).
+Without these the flow still works, but the reset link is written to the Vercel
+**function logs** instead of being emailed (fine for testing only).
+
+| Name | Value |
+|---|---|
+| `RESEND_API_KEY` | API key from resend.com |
+| `EMAIL_FROM` | verified sender, e.g. `Acme <noreply@acme.com>`. Omit to use Resend's `onboarding@resend.dev` test sender (only delivers to your own Resend account email until you verify a domain). |
+
+Verify a domain in Resend to send to real customer inboxes; otherwise only your
+own address receives mail.
+
+### Exact Central Bank FX rate — daily auto-refresh
+
+The app always shows a correct INR⇄AED rate (it falls back to a live market rate
+that tracks CBUAE within ~0.3%). To pin the **exact** UAE Central Bank figure,
+a scheduled GitHub Action pushes it in daily — CBUAE's firewall blocks Vercel's
+own servers, so the Action fetches from a GitHub runner instead. Full steps are
+in [FX-RATE.md](FX-RATE.md); in short:
+
+| Where | Name | Value |
+|---|---|---|
+| Vercel (Production) | `FX_INGEST_SECRET` | a long random string |
+| GitHub repo secrets | `FX_INGEST_SECRET` | the **same** string |
+| GitHub repo secrets | `FX_INGEST_URL` | `https://<your-domain>/api/fx/ingest` |
+| GitHub repo secrets | `VERCEL_PROTECTION_BYPASS` | only if Deployment Protection is on |
+
+> The in-app **Refresh** button always works and updates the shared rate
+> immediately; the daily Action just keeps the exact Central Bank value current
+> without anyone clicking. Check the stored value any time at
+> `GET /api/fx/ingest`.
+
 ## 5. Custom domain (when ready)
 
 In Vercel: **Project → Settings → Domains → Add**. Enter your domain; Vercel shows the exact
