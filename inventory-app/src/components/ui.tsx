@@ -132,6 +132,31 @@ export function Card({
   );
 }
 
+// ---- StatTile (vibrant gradient KPI tile) -----------------------------------
+
+export function StatTile({
+  label,
+  value,
+  sub,
+  grad,
+  children,
+}: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  sub?: React.ReactNode;
+  grad: string; // e.g. "from-emerald-500 to-teal-600"
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className={cn("rounded-xl p-4 text-white shadow-lg shadow-indigo-500/15 bg-gradient-to-br", grad)}>
+      <div className="text-xs text-white/80">{label}</div>
+      <div className="text-2xl font-bold mt-1 tabular-nums">{value}</div>
+      {sub != null && <div className="text-xs text-white/70 mt-1">{sub}</div>}
+      {children}
+    </div>
+  );
+}
+
 // ---- StatusPill -------------------------------------------------------------
 
 export function StatusPill({

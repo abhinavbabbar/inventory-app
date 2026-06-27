@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { can } from "@/lib/permissions";
 import { formatAed } from "@/lib/money";
 import { getReceivablesAging } from "@/lib/reports";
-import { Card, EmptyState, PageHeader, StatusPill, Table, TD, TH, THead, TR } from "@/components/ui";
+import { Card, EmptyState, PageHeader, StatTile, StatusPill, Table, TD, TH, THead, TR } from "@/components/ui";
 
 export const metadata = { title: "Receivables aging · Reports" };
 
@@ -16,6 +16,13 @@ const bucketLabel: Record<string, string> = {
   d30: "31–60 days",
   d60: "61–90 days",
   d90: "90+ days",
+};
+
+const bucketGrad: Record<string, string> = {
+  current: "from-emerald-500 to-teal-600",
+  d30: "from-amber-500 to-orange-600",
+  d60: "from-orange-500 to-rose-600",
+  d90: "from-rose-500 to-red-600",
 };
 
 export default async function ReceivablesPage() {
@@ -34,17 +41,9 @@ export default async function ReceivablesPage() {
       {/* Bucket summary */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {(["current", "d30", "d60", "d90"] as const).map((b) => (
-          <Card key={b} className={`p-4 ${b === "d90" && report.buckets.d90.greaterThan(0) ? "border-l-4 border-l-red-500" : ""}`}>
-            <div className="text-xs text-neutral-500">{bucketLabel[b]}</div>
-            <div className="text-lg font-semibold tabular-nums mt-1">{formatAed(report.buckets[b])}</div>
-          </Card>
+          <StatTile key={b} grad={bucketGrad[b]} label={bucketLabel[b]} value={formatAed(report.buckets[b])} />
         ))}
-        <Card className="p-4 border-l-4 border-l-amber-500">
-          <div className="text-xs text-neutral-500">Total owed</div>
-          <div className="text-lg font-semibold tabular-nums mt-1 text-amber-700 dark:text-amber-400">
-            {formatAed(report.total)}
-          </div>
-        </Card>
+        <StatTile grad="from-fuchsia-500 to-pink-600" label="Total owed" value={formatAed(report.total)} />
       </div>
 
       {report.rows.length === 0 ? (

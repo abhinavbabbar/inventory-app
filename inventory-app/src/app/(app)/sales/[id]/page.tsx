@@ -11,6 +11,7 @@ import {
   Card,
   LinkButton,
   PageHeader,
+  StatTile,
   Table,
   TD,
   TH,
@@ -113,24 +114,18 @@ export default async function SaleDetailPage({
             <div className="mt-1 font-medium text-neutral-500">Walk-in customer</div>
           )}
         </Card>
-        <Card className="p-4">
-          <div className="text-xs text-neutral-500">Total</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums">{formatAed(total)}</div>
-          <div className="text-xs text-neutral-500 mt-1">
-            Subtotal {formatAed(subtotal)} · VAT {vatRate}%
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs text-neutral-500">Gross profit</div>
-          <div
-            className={`text-2xl font-semibold mt-1 tabular-nums ${
-              gross.isNegative() ? "text-red-600" : "text-green-700 dark:text-green-400"
-            }`}
-          >
-            {formatAed(gross)}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">COGS {formatAed(cogs)} · FIFO cost</div>
-        </Card>
+        <StatTile
+          grad="from-indigo-500 to-violet-600"
+          label="Total"
+          value={formatAed(total)}
+          sub={`Subtotal ${formatAed(subtotal)} · VAT ${vatRate}%`}
+        />
+        <StatTile
+          grad={gross.isNegative() ? "from-rose-500 to-red-600" : "from-green-500 to-emerald-600"}
+          label="Gross profit"
+          value={formatAed(gross)}
+          sub={`COGS ${formatAed(cogs)} · FIFO cost`}
+        />
       </div>
 
       <section>

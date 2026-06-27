@@ -12,6 +12,7 @@ import {
   Card,
   EmptyState,
   PageHeader,
+  StatTile,
   Table,
   TD,
   TH,
@@ -87,29 +88,14 @@ export default async function SupplierDetailPage({
 
       {/* Balance cards (INR) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="p-4 border-l-4 border-l-indigo-500">
-          <div className="text-xs text-neutral-500">Purchased</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums text-indigo-700 dark:text-indigo-400">
-            {formatInr(balance.purchasedInr)}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">goods, in INR</div>
-        </Card>
-        <Card className="p-4 border-l-4 border-l-emerald-500">
-          <div className="text-xs text-neutral-500">Paid</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums text-emerald-700 dark:text-emerald-400">
-            {formatInr(balance.paidInr)}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">{supplier.payments.length} payment(s)</div>
-        </Card>
-        <Card className={`p-4 border-l-4 ${outstanding.greaterThan(0) ? "border-l-amber-500" : "border-l-neutral-300 dark:border-l-neutral-700"}`}>
-          <div className="text-xs text-neutral-500">Outstanding</div>
-          <div className={`text-2xl font-semibold mt-1 tabular-nums ${outstanding.greaterThan(0) ? "text-amber-700 dark:text-amber-400" : ""}`}>
-            {formatInr(outstanding)}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">
-            {outstanding.greaterThan(0) ? "still owed" : outstanding.lessThan(0) ? "advance / credit" : "settled"}
-          </div>
-        </Card>
+        <StatTile grad="from-indigo-500 to-violet-600" label="Purchased" value={formatInr(balance.purchasedInr)} sub="goods, in INR" />
+        <StatTile grad="from-emerald-500 to-teal-600" label="Paid" value={formatInr(balance.paidInr)} sub={`${supplier.payments.length} payment(s)`} />
+        <StatTile
+          grad={outstanding.greaterThan(0) ? "from-rose-500 to-red-600" : "from-slate-400 to-slate-500"}
+          label="Outstanding"
+          value={formatInr(outstanding)}
+          sub={outstanding.greaterThan(0) ? "still owed" : outstanding.lessThan(0) ? "advance / credit" : "settled"}
+        />
       </div>
 
       {/* Purchases (shipments) */}

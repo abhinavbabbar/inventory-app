@@ -40,7 +40,7 @@ export default async function LoginPage({
     "w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-indigo-50/40 via-white to-cyan-50/30 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-indigo-100/60 via-fuchsia-50/40 to-cyan-100/50 dark:from-indigo-950/40 dark:via-neutral-950 dark:to-cyan-950/30">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-3 h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-sm" />

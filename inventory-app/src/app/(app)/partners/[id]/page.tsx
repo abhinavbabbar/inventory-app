@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import {
   PageHeader,
   Card,
+  StatTile,
   Table,
   THead,
   TH,
@@ -102,26 +103,14 @@ export default async function PartnerDetailPage({
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="p-4 border-l-4 border-l-emerald-500">
-          <div className="text-xs text-neutral-500">Capital investment (equity)</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums text-emerald-700 dark:text-emerald-400">
-            {formatAed(capitalTotal)}
-          </div>
-        </Card>
-        <Card className="p-4 border-l-4 border-l-indigo-500">
-          <div className="text-xs text-neutral-500">Ownership share</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums text-indigo-700 dark:text-indigo-400">
-            {sharePct.toFixed(2)}%
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">from capital only</div>
-        </Card>
-        <Card className="p-4 border-l-4 border-l-amber-500">
-          <div className="text-xs text-neutral-500">Fronted costs (reimbursable)</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums text-amber-700 dark:text-amber-400">
-            {opexTotal.isZero() ? "—" : formatAed(opexTotal)}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">opex they paid · not equity</div>
-        </Card>
+        <StatTile grad="from-emerald-500 to-teal-600" label="Capital investment (equity)" value={formatAed(capitalTotal)} />
+        <StatTile grad="from-indigo-500 to-violet-600" label="Ownership share" value={`${sharePct.toFixed(2)}%`} sub="from capital only" />
+        <StatTile
+          grad="from-amber-500 to-orange-600"
+          label="Fronted costs (reimbursable)"
+          value={opexTotal.isZero() ? "—" : formatAed(opexTotal)}
+          sub="opex they paid · not equity"
+        />
       </div>
 
       {/* Cumulative investment chart */}

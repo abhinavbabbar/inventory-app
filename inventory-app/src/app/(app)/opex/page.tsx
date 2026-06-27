@@ -9,6 +9,7 @@ import {
   EmptyState,
   LinkButton,
   PageHeader,
+  StatTile,
   Table,
   TD,
   TH,
@@ -112,19 +113,11 @@ export default async function OpexPage({
       </form>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 md:col-span-1">
-          <div className="text-xs text-neutral-500">{label} total</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums">{formatAed(total)}</div>
-        </Card>
+        <StatTile grad="from-rose-500 to-red-600" label={`${label} total`} value={formatAed(total)} />
         {OPEX_CATEGORIES.slice(0, 3).map((c) => {
           const v = byCategory.get(c);
           if (!v || v.isZero()) return null;
-          return (
-            <Card key={c} className="p-4">
-              <div className="text-xs text-neutral-500">{categoryLabels[c]}</div>
-              <div className="text-xl font-semibold mt-1 tabular-nums">{formatAed(v)}</div>
-            </Card>
-          );
+          return <StatTile key={c} grad="from-amber-500 to-orange-600" label={categoryLabels[c]} value={formatAed(v)} />;
         })}
       </div>
 

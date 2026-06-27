@@ -7,7 +7,7 @@ import {
   Card,
   EmptyState,
   PageHeader,
-  StatusPill,
+  StatTile,
   Table,
   TD,
   TH,
@@ -94,44 +94,30 @@ export default async function ItemDetailPage({
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <Card className="p-4">
-          <div className="text-xs text-neutral-500">Current stock</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums">
-            {formatNumber(stock)} <span className="text-sm font-normal text-neutral-500">{item.unit}</span>
-          </div>
-          <div className="mt-2">
-            <StatusPill
-              status={status === "OK" ? "ok" : status === "SHORTAGE" ? "warn" : "bad"}
-              label={status === "OK" ? "In stock" : status === "SHORTAGE" ? "Shortage" : "Out"}
-            />
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs text-neutral-500">Reorder threshold</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums">
-            {formatNumber(item.reorderThreshold)}
-          </div>
-        </Card>
-        <Card className="p-4 border-l-4 border-l-indigo-500">
-          <div className="text-xs text-neutral-500">Buying price (INR)</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums text-indigo-700 dark:text-indigo-400">
-            {avgPurchaseInr && avgPurchaseInr.greaterThan(0) ? formatInr(avgPurchaseInr) : "—"}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">avg ₹/unit paid</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs text-neutral-500">Avg landed cost</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums">
-            {summary && stock > 0 ? formatAed(summary.avgLandedCostAed) : "—"}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">AED, after shipping + FX</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs text-neutral-500">Inventory value</div>
-          <div className="text-2xl font-semibold mt-1 tabular-nums">
-            {summary && stock > 0 ? formatAed(summary.inventoryValueAed) : "—"}
-          </div>
-        </Card>
+        <StatTile
+          grad={status === "OK" ? "from-emerald-500 to-teal-600" : status === "SHORTAGE" ? "from-amber-500 to-orange-600" : "from-rose-500 to-red-600"}
+          label="Current stock"
+          value={<>{formatNumber(stock)} <span className="text-sm font-normal text-white/80">{item.unit}</span></>}
+          sub={status === "OK" ? "In stock" : status === "SHORTAGE" ? "Shortage" : "Out of stock"}
+        />
+        <StatTile grad="from-slate-400 to-slate-500" label="Reorder threshold" value={formatNumber(item.reorderThreshold)} />
+        <StatTile
+          grad="from-indigo-500 to-violet-600"
+          label="Buying price (INR)"
+          value={avgPurchaseInr && avgPurchaseInr.greaterThan(0) ? formatInr(avgPurchaseInr) : "—"}
+          sub="avg ₹/unit paid"
+        />
+        <StatTile
+          grad="from-cyan-500 to-blue-600"
+          label="Avg landed cost"
+          value={summary && stock > 0 ? formatAed(summary.avgLandedCostAed) : "—"}
+          sub="AED, after shipping + FX"
+        />
+        <StatTile
+          grad="from-violet-500 to-fuchsia-600"
+          label="Inventory value"
+          value={summary && stock > 0 ? formatAed(summary.inventoryValueAed) : "—"}
+        />
       </div>
 
       <section>

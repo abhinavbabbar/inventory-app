@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { can } from "@/lib/permissions";
 import { formatInr } from "@/lib/money";
 import { getPayables } from "@/lib/reports";
-import { Card, EmptyState, PageHeader, Table, TD, TH, THead, TR } from "@/components/ui";
+import { Card, EmptyState, PageHeader, StatTile, Table, TD, TH, THead, TR } from "@/components/ui";
 
 export const metadata = { title: "Supplier payables · Reports" };
 
@@ -22,12 +22,9 @@ export default async function PayablesPage() {
         description={<><Link href="/reports" className="hover:underline">Reports</Link> · what you owe suppliers (INR)</>}
       />
 
-      <Card className="p-4 max-w-xs border-l-4 border-l-rose-500">
-        <div className="text-xs text-neutral-500">Total outstanding</div>
-        <div className="text-2xl font-semibold tabular-nums mt-1 text-rose-700 dark:text-rose-400">
-          {formatInr(totalInr)}
-        </div>
-      </Card>
+      <div className="max-w-xs">
+        <StatTile grad="from-rose-500 to-red-600" label="Total outstanding" value={formatInr(totalInr)} />
+      </div>
 
       {rows.length === 0 ? (
         <EmptyState title="All suppliers settled" description="There are no outstanding supplier balances." />
