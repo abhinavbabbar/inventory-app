@@ -101,6 +101,7 @@ model Item {
   shipmentLines  ShipmentLine[]
   saleLines      SaleLine[]
   orderLines     OrderLine[]
+  estimateLines  EstimateLine[]
   stockMovements StockMovement[]
 
   @@index([sku])
@@ -224,8 +225,9 @@ model Customer {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  sales  Sale[]
-  orders Order[]
+  sales     Sale[]
+  orders    Order[]
+  estimates Estimate[]
 
   @@index([mobile])
   @@index([email])
@@ -280,9 +282,48 @@ model Order {
   lines    OrderLine[]
   leads    Lead[]
   payments OrderPayment[]
+  fromEstimate Estimate? @relation("EstimateConvertedOrder")
 
   @@index([status, orderedAt])
   @@index([customerId])
+}
+
+// A quotation/estimate that can be converted into an Order.
+model Estimate {
+  id               String    @id @default(cuid())
+  estimateNumber   String    @unique
+  customerId       String
+  status           String    // DRAFT | SENT | ACCEPTED | DECLINED | CONVERTED
+  issuedAt         DateTime  @default(now())
+  validUntil       DateTime?
+  vatRatePct       Decimal   @default(0)
+  vatAmountAed     Decimal   @default(0)
+  notes            String?
+  convertedOrderId String?   @unique
+  convertedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  customer       Customer       @relation(fields: [customerId], references: [id])
+  lines          EstimateLine[]
+  convertedOrder Order?         @relation("EstimateConvertedOrder", fields: [convertedOrderId], references: [id])
+
+  @@index([status, issuedAt])
+  @@index([customerId])
+}
+
+model EstimateLine {
+  id               String  @id @default(cuid())
+  estimateId       String
+  itemId           String
+  quantity         Int
+  unitSalePriceAed Decimal
+
+  estimate Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  item     Item     @relation(fields: [itemId], references: [id])
+
+  @@index([estimateId])
+  @@index([itemId])
 }
 
 // Money received against an order. Multiple people can each pay a part, and

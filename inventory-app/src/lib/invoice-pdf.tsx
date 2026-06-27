@@ -52,6 +52,7 @@ function fmt(value: Prisma.Decimal | string | number): string {
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "long" });
 
 export type InvoicePdfInput = {
+  docType?: "INVOICE" | "QUOTATION";
   company: {
     name: string;
     tagline: string;
@@ -123,7 +124,7 @@ export function InvoiceDocument({ data }: { data: InvoicePdfInput }) {
             )}
           </View>
           <View>
-            <Text style={styles.invoiceTitle}>INVOICE</Text>
+            <Text style={styles.invoiceTitle}>{data.docType === "QUOTATION" ? "QUOTATION" : "INVOICE"}</Text>
             <Text style={[styles.muted, { textAlign: "right", marginTop: 4 }]}>
               {data.sale.invoiceNumber}
             </Text>

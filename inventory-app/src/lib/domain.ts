@@ -41,6 +41,17 @@ export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export const ORDER_STATUSES = ["IN_PROGRESS", "DISPATCHED", "CANCELLED"] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+export const ESTIMATE_STATUSES = ["DRAFT", "SENT", "ACCEPTED", "DECLINED", "CONVERTED"] as const;
+export type EstimateStatus = (typeof ESTIMATE_STATUSES)[number];
+
+export const ESTIMATE_STATUS_LABELS: Record<EstimateStatus, string> = {
+  DRAFT: "Draft",
+  SENT: "Sent",
+  ACCEPTED: "Accepted",
+  DECLINED: "Declined",
+  CONVERTED: "Converted",
+};
+
 export const SUPPLIER_PAYMENT_METHODS = [
   "CASH",
   "BANK_TRANSFER",
