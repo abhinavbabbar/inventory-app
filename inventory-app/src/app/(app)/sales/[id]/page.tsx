@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { formatAed, sumDecimal } from "@/lib/money";
+import { getCompanyInfo } from "@/lib/settings";
+import { waLink } from "@/lib/whatsapp";
+import { ShareActions } from "@/components/share-actions";
 import {
   Card,
   LinkButton,
@@ -14,6 +17,8 @@ import {
   THead,
   TR,
 } from "@/components/ui";
+
+import { emailInvoice } from "./actions";
 
 export const metadata = { title: "Sale · Inventory & P&L" };
 
@@ -45,6 +50,12 @@ export default async function SaleDetailPage({
 
   const vatRate = (sale.vatRatePct as Prisma.Decimal).toString();
 
+  const company = await getCompanyInfo();
+  const brand = company.name || "Inventory & P&L";
+  const waMessage = `Hi ${sale.customer?.name ?? "there"}, here's your invoice ${sale.invoiceNumber} from ${brand}. Total: ${formatAed(total)}. Thank you!`;
+  const waHref = waLink(sale.customer?.mobile, waMessage);
+  const emailThis = emailInvoice.bind(null, sale.id);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -63,9 +74,18 @@ export default async function SaleDetailPage({
           </>
         }
         actions={
-          <LinkButton href={`/sales/${sale.id}/invoice`} variant="secondary">
-            Download invoice
-          </LinkButton>
+          <div className="flex flex-wrap items-center gap-2">
+            <LinkButton href={`/sales/${sale.id}/invoice`} variant="secondary">
+              Download invoice
+            </LinkButton>
+            <ShareActions
+              waHref={waHref}
+              waLabel="WhatsApp"
+              emailAction={emailThis}
+              emailLabel="Email invoice"
+              emailHint={sale.customer?.email ? undefined : "No customer email on file"}
+            />
+          </div>
         }
       />
 

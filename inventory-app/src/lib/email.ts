@@ -7,7 +7,15 @@
 //                   Defaults to Resend's test sender (only delivers to the
 //                   Resend account owner until you verify a domain).
 
-type SendArgs = { to: string; subject: string; html: string; text?: string };
+type Attachment = { filename: string; content: string }; // content = base64
+
+type SendArgs = {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  attachments?: Attachment[];
+};
 
 export type SendResult = { delivered: boolean; reason?: string };
 
@@ -31,7 +39,14 @@ export async function sendEmail(args: SendArgs): Promise<SendResult> {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to: args.to, subject: args.subject, html: args.html, text: args.text }),
+      body: JSON.stringify({
+        from,
+        to: args.to,
+        subject: args.subject,
+        html: args.html,
+        text: args.text,
+        ...(args.attachments && args.attachments.length > 0 ? { attachments: args.attachments } : {}),
+      }),
     });
     if (!res.ok) {
       const body = await res.text();

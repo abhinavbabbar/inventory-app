@@ -6,6 +6,9 @@ import { Prisma } from "@prisma/client";
 import { formatAed, sumDecimal } from "@/lib/money";
 import { type OrderStatus, ORDER_PAYMENT_METHOD_LABELS, type OrderPaymentMethod } from "@/lib/domain";
 import { getStockSummariesForItems } from "@/lib/items";
+import { getCompanyInfo } from "@/lib/settings";
+import { waLink } from "@/lib/whatsapp";
+import { ShareActions } from "@/components/share-actions";
 import {
   Card,
   PageHeader,
@@ -22,6 +25,7 @@ import {
   deleteOrderPayment,
   cancelOrder,
   dispatchOrder,
+  sendOrderReminderEmail,
 } from "../actions";
 import {
   CancelOrderButton,
@@ -92,6 +96,11 @@ export default async function OrderDetailPage({
   const advancePaid = order.advancePaidAt != null;
 
   const addPayment = addOrderPayment.bind(null, id);
+  const emailReminder = sendOrderReminderEmail.bind(null, id);
+
+  const brand = (await getCompanyInfo()).name || "Inventory & P&L";
+  const reminderMsg = `Hi ${order.customer.name}, a friendly reminder that order ${order.orderNumber} has an outstanding balance of ${formatAed(remaining.isNegative() ? new Prisma.Decimal(0) : remaining)}. Thank you!`;
+  const reminderWa = remaining.isPositive() ? waLink(order.customer.mobile, reminderMsg) : null;
 
   async function handleCancel() {
     "use server";
@@ -274,6 +283,22 @@ export default async function OrderDetailPage({
               </TR>
             </tfoot>
           </Table>
+        )}
+
+        {/* Reminder for outstanding balance */}
+        {status !== "CANCELLED" && remaining.isPositive() && (
+          <div className="flex items-center justify-between gap-3 flex-wrap border-t border-neutral-200 dark:border-neutral-800 pt-3">
+            <span className="text-sm text-neutral-500">
+              Outstanding {formatAed(remaining)} — send a reminder
+            </span>
+            <ShareActions
+              waHref={reminderWa}
+              waLabel="WhatsApp reminder"
+              emailAction={emailReminder}
+              emailLabel="Email reminder"
+              emailHint={order.customer.email ? undefined : "No customer email on file"}
+            />
+          </div>
         )}
 
         {/* Add a payment */}

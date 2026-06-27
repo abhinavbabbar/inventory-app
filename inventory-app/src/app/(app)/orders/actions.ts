@@ -8,7 +8,10 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { can } from "@/lib/permissions";
-import { d, round2, sumDecimal } from "@/lib/money";
+import { d, round2, sumDecimal, formatAed } from "@/lib/money";
+import { getCompanyInfo } from "@/lib/settings";
+import { sendEmail, isEmailConfigured } from "@/lib/email";
+import type { EmailState } from "@/components/share-actions";
 
 const decimalString = z
   .string()
@@ -374,6 +377,42 @@ export async function deleteOrderPayment(orderId: string, paymentId: string): Pr
   revalidatePath(`/orders/${orderId}`);
   revalidatePath("/orders");
   revalidatePath("/dashboard");
+}
+
+// Email the customer a reminder of the outstanding balance on an order.
+export async function sendOrderReminderEmail(
+  orderId: string,
+  _prev: EmailState,
+  _formData: FormData,
+): Promise<EmailState> {
+  await requireCanEdit();
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { customer: true, payments: { select: { amountAed: true } } },
+  });
+  if (!order) return { error: "Order not found" };
+
+  const total = (order.advanceAmountAed as Prisma.Decimal).add(order.balanceAmountAed as Prisma.Decimal);
+  const paid = sumDecimal(order.payments.map((p) => p.amountAed as Prisma.Decimal));
+  const remaining = total.sub(paid);
+  if (!remaining.greaterThan(0)) return { error: "Nothing is outstanding on this order." };
+  if (!order.customer.email) return { error: "This customer has no email address on file." };
+  if (!isEmailConfigured()) return { error: "Email isn't set up yet (add RESEND_API_KEY)." };
+
+  const brand = (await getCompanyInfo()).name || "Inventory & P&L";
+  const result = await sendEmail({
+    to: order.customer.email,
+    subject: `Payment reminder · order ${order.orderNumber}`,
+    text: `Hi ${order.customer.name},\n\nThis is a friendly reminder that order ${order.orderNumber} has an outstanding balance of ${formatAed(remaining)} (of ${formatAed(total)} total).\n\nThank you,\n${brand}`,
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#1f2937">
+      <p>Hi ${order.customer.name},</p>
+      <p>This is a friendly reminder that order <strong>${order.orderNumber}</strong> has an outstanding balance of
+      <strong>${formatAed(remaining)}</strong> (of ${formatAed(total)} total).</p>
+      <p>Thank you,<br>${brand}</p>
+    </div>`,
+  });
+  if (!result.delivered) return { error: `Couldn't send the email (${result.reason}).` };
+  return { message: `Reminder emailed to ${order.customer.email}` };
 }
 
 export async function cancelOrder(id: string): Promise<void> {
