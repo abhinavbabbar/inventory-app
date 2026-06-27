@@ -272,35 +272,108 @@ async function requireCanEdit() {
   if (!can(session.user, "orders", "edit")) throw new Error("Forbidden");
 }
 
-export async function toggleAdvancePaid(id: string): Promise<void> {
-  await requireCanEdit();
-  const order = await prisma.order.findUniqueOrThrow({
-    where: { id },
-    select: { advancePaidAt: true, status: true },
+// --- Order payments (multi-payer ledger) ------------------------------------
+
+const orderPaymentSchema = z.object({
+  payerName: z.string().trim().min(1, "Enter who paid").max(120),
+  amountAed: decimalStringNonNegative.refine((v) => parseFloat(v) > 0, "Amount must be greater than zero"),
+  paidAt: z.coerce.date(), // operator-set — back-dated payments allowed
+  method: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v == null || v.length === 0 ? null : v)),
+  notes: z
+    .string()
+    .trim()
+    .max(300)
+    .optional()
+    .transform((v) => (v == null || v.length === 0 ? null : v)),
+});
+
+export type OrderPaymentState = { message?: string; error?: string };
+
+// Recompute the denormalized advancePaidAt / balancePaidAt flags from the
+// payment ledger, so the dashboard, orders list and analytics stay correct.
+// A flag is set to the date the cumulative total (oldest-first) crosses the
+// advance / full-total threshold — which respects back-dated payments.
+async function recomputeOrderPaymentStatus(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+): Promise<void> {
+  const order = await tx.order.findUniqueOrThrow({
+    where: { id: orderId },
+    select: { advanceAmountAed: true, balanceAmountAed: true },
   });
-  if (order.status !== "IN_PROGRESS") {
-    throw new Error("Can only update payment status on in-progress orders");
+  const advance = order.advanceAmountAed as Prisma.Decimal;
+  const total = advance.add(order.balanceAmountAed as Prisma.Decimal);
+
+  const payments = await tx.orderPayment.findMany({
+    where: { orderId },
+    orderBy: { paidAt: "asc" },
+    select: { amountAed: true, paidAt: true },
+  });
+
+  let cum = new Prisma.Decimal(0);
+  let advancePaidAt: Date | null = null;
+  let balancePaidAt: Date | null = null;
+  for (const p of payments) {
+    cum = cum.add(p.amountAed as Prisma.Decimal);
+    if (advancePaidAt == null && advance.greaterThan(0) && cum.greaterThanOrEqualTo(advance)) {
+      advancePaidAt = p.paidAt;
+    }
+    if (balancePaidAt == null && total.greaterThan(0) && cum.greaterThanOrEqualTo(total)) {
+      balancePaidAt = p.paidAt;
+    }
   }
-  await prisma.order.update({
-    where: { id },
-    data: { advancePaidAt: order.advancePaidAt ? null : new Date() },
-  });
-  revalidatePath(`/orders/${id}`);
-  revalidatePath("/orders");
+
+  await tx.order.update({ where: { id: orderId }, data: { advancePaidAt, balancePaidAt } });
 }
 
-export async function toggleBalancePaid(id: string): Promise<void> {
+export async function addOrderPayment(
+  orderId: string,
+  _prev: OrderPaymentState,
+  formData: FormData,
+): Promise<OrderPaymentState> {
   await requireCanEdit();
-  const order = await prisma.order.findUniqueOrThrow({
-    where: { id },
-    select: { balancePaidAt: true },
+  const parsed = orderPaymentSchema.safeParse({
+    payerName: formData.get("payerName"),
+    amountAed: formData.get("amountAed"),
+    paidAt: formData.get("paidAt"),
+    method: formData.get("method"),
+    notes: formData.get("notes"),
   });
-  await prisma.order.update({
-    where: { id },
-    data: { balancePaidAt: order.balancePaidAt ? null : new Date() },
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true } });
+  if (!order) return { error: "Order not found" };
+  if (order.status === "CANCELLED") return { error: "Can't record payments on a cancelled order" };
+
+  const { payerName, amountAed, paidAt, method, notes } = parsed.data;
+  await prisma.$transaction(async (tx) => {
+    await tx.orderPayment.create({
+      data: { orderId, payerName, amountAed: new Prisma.Decimal(amountAed), paidAt, method, notes },
+    });
+    await recomputeOrderPaymentStatus(tx, orderId);
   });
-  revalidatePath(`/orders/${id}`);
+
+  revalidatePath(`/orders/${orderId}`);
   revalidatePath("/orders");
+  revalidatePath("/dashboard");
+  return { message: "Payment recorded" };
+}
+
+export async function deleteOrderPayment(orderId: string, paymentId: string): Promise<void> {
+  await requireCanEdit();
+  await prisma.$transaction(async (tx) => {
+    await tx.orderPayment.delete({ where: { id: paymentId } });
+    await recomputeOrderPaymentStatus(tx, orderId);
+  });
+  revalidatePath(`/orders/${orderId}`);
+  revalidatePath("/orders");
+  revalidatePath("/dashboard");
 }
 
 export async function cancelOrder(id: string): Promise<void> {

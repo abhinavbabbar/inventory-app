@@ -279,9 +279,28 @@ model Order {
   sale     Sale?       @relation(fields: [saleId], references: [id])
   lines    OrderLine[]
   leads    Lead[]
+  payments OrderPayment[]
 
   @@index([status, orderedAt])
   @@index([customerId])
+}
+
+// Money received against an order. Multiple people can each pay a part, and
+// the date is operator-set so back-dated payments can be recorded. The order's
+// advancePaidAt / balancePaidAt flags are derived from the sum of these rows.
+model OrderPayment {
+  id        String   @id @default(cuid())
+  orderId   String
+  payerName String
+  amountAed Decimal
+  paidAt    DateTime
+  method    String?  // CASH | BANK_TRANSFER | CARD | UPI | CHEQUE | OTHER
+  notes     String?
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, paidAt])
 }
 
 model OrderLine {

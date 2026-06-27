@@ -58,6 +58,25 @@ export const SUPPLIER_PAYMENT_METHOD_LABELS: Record<SupplierPaymentMethod, strin
   OTHER: "Other",
 };
 
+export const ORDER_PAYMENT_METHODS = [
+  "CASH",
+  "BANK_TRANSFER",
+  "CARD",
+  "UPI",
+  "CHEQUE",
+  "OTHER",
+] as const;
+export type OrderPaymentMethod = (typeof ORDER_PAYMENT_METHODS)[number];
+
+export const ORDER_PAYMENT_METHOD_LABELS: Record<OrderPaymentMethod, string> = {
+  CASH: "Cash",
+  BANK_TRANSFER: "Bank transfer",
+  CARD: "Card",
+  UPI: "UPI",
+  CHEQUE: "Cheque",
+  OTHER: "Other",
+};
+
 export const SETTING_KEYS = {
   companyInfo: "company_info", // { name, address, logoUrl, trn }
   defaultFxRate: "default_fx_rate", // string of Decimal

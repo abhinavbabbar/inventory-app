@@ -3,48 +3,6 @@
 import { useTransition } from "react";
 import { Button } from "@/components/ui";
 
-export function ToggleAdvanceButton({
-  paid,
-  action,
-}: {
-  paid: boolean;
-  action: () => Promise<void>;
-}) {
-  const [pending, start] = useTransition();
-  return (
-    <Button
-      type="button"
-      variant={paid ? "secondary" : "primary"}
-      size="sm"
-      disabled={pending}
-      onClick={() => start(() => action())}
-    >
-      {pending ? "…" : paid ? "Mark advance unpaid" : "Mark advance paid"}
-    </Button>
-  );
-}
-
-export function ToggleBalanceButton({
-  paid,
-  action,
-}: {
-  paid: boolean;
-  action: () => Promise<void>;
-}) {
-  const [pending, start] = useTransition();
-  return (
-    <Button
-      type="button"
-      variant={paid ? "secondary" : "primary"}
-      size="sm"
-      disabled={pending}
-      onClick={() => start(() => action())}
-    >
-      {pending ? "…" : paid ? "Mark balance unpaid" : "Mark balance paid"}
-    </Button>
-  );
-}
-
 export function CancelOrderButton({ action }: { action: () => Promise<void> }) {
   const [pending, start] = useTransition();
   return (

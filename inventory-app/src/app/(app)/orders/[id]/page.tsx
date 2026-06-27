@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { formatAed, sumDecimal } from "@/lib/money";
-import { type OrderStatus } from "@/lib/domain";
+import { type OrderStatus, ORDER_PAYMENT_METHOD_LABELS, type OrderPaymentMethod } from "@/lib/domain";
 import { getStockSummariesForItems } from "@/lib/items";
 import {
   Card,
@@ -18,17 +18,16 @@ import {
 } from "@/components/ui";
 
 import {
-  toggleAdvancePaid,
-  toggleBalancePaid,
+  addOrderPayment,
+  deleteOrderPayment,
   cancelOrder,
   dispatchOrder,
 } from "../actions";
 import {
-  ToggleAdvanceButton,
-  ToggleBalanceButton,
   CancelOrderButton,
   DispatchOrderButton,
 } from "../_components/order-action-buttons";
+import { AddOrderPaymentForm, DeleteOrderPaymentButton } from "../_components/payment-ledger";
 
 export const metadata = { title: "Order · Inventory & P&L" };
 
@@ -59,6 +58,7 @@ export default async function OrderDetailPage({
       lines: { include: { item: true }, orderBy: { id: "asc" } },
       sale: { select: { id: true, invoiceNumber: true } },
       leads: { select: { id: true, name: true } },
+      payments: { orderBy: { paidAt: "asc" } },
     },
   });
   if (!order) notFound();
@@ -67,6 +67,13 @@ export default async function OrderDetailPage({
     order.lines.map((l) => (l.unitSalePriceAed as Prisma.Decimal).mul(l.quantity)),
   );
   const total = subtotal.add(order.vatAmountAed as Prisma.Decimal);
+
+  // Payment ledger: who paid how much, what's left.
+  const totalPaid = sumDecimal(order.payments.map((p) => p.amountAed as Prisma.Decimal));
+  const remaining = total.sub(totalPaid);
+  const fullyPaid = !remaining.isPositive(); // remaining <= 0
+  const paymentTone = fullyPaid ? "ok" : totalPaid.isPositive() ? "warn" : "muted";
+  const paymentLabel = fullyPaid ? "Fully paid" : totalPaid.isPositive() ? "Partially paid" : "Unpaid";
 
   // Stock check for dispatch readiness
   const summaries = await getStockSummariesForItems(order.lines.map((l) => l.itemId));
@@ -83,16 +90,9 @@ export default async function OrderDetailPage({
   const status = order.status as OrderStatus;
   const isInProgress = status === "IN_PROGRESS";
   const advancePaid = order.advancePaidAt != null;
-  const balancePaid = order.balancePaidAt != null;
 
-  async function handleToggleAdvance() {
-    "use server";
-    await toggleAdvancePaid(id);
-  }
-  async function handleToggleBalance() {
-    "use server";
-    await toggleBalancePaid(id);
-  }
+  const addPayment = addOrderPayment.bind(null, id);
+
   async function handleCancel() {
     "use server";
     await cancelOrder(id);
@@ -197,59 +197,92 @@ export default async function OrderDetailPage({
         </Card>
       </div>
 
-      <Card className="p-6 space-y-4">
-        <h2 className="text-lg font-semibold">Payment</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs text-neutral-500">
-                  Advance ({(order.advancePct as Prisma.Decimal).toString()}%)
-                </div>
-                <div className="text-xl font-semibold tabular-nums">
-                  {formatAed(order.advanceAmountAed)}
-                </div>
-              </div>
-              <StatusPill
-                status={advancePaid ? "ok" : (order.advanceAmountAed as Prisma.Decimal).isZero() ? "muted" : "warn"}
-                label={
-                  advancePaid
-                    ? `Paid ${order.advancePaidAt ? dateFmt.format(order.advancePaidAt) : ""}`
-                    : (order.advanceAmountAed as Prisma.Decimal).isZero()
-                      ? "No advance"
-                      : "Pending"
-                }
-              />
-            </div>
-            {isInProgress && !(order.advanceAmountAed as Prisma.Decimal).isZero() && (
-              <ToggleAdvanceButton paid={advancePaid} action={handleToggleAdvance} />
-            )}
-          </div>
+      <Card className="p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Payments</h2>
+          <StatusPill status={paymentTone} label={paymentLabel} />
+        </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs text-neutral-500">Balance</div>
-                <div className="text-xl font-semibold tabular-nums">
-                  {formatAed(order.balanceAmountAed)}
-                </div>
-              </div>
-              <StatusPill
-                status={balancePaid ? "ok" : (order.balanceAmountAed as Prisma.Decimal).isZero() ? "muted" : "warn"}
-                label={
-                  balancePaid
-                    ? `Paid ${order.balancePaidAt ? dateFmt.format(order.balancePaidAt) : ""}`
-                    : (order.balanceAmountAed as Prisma.Decimal).isZero()
-                      ? "No balance"
-                      : "Pending"
-                }
-              />
+        {/* Summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-lg bg-neutral-50 dark:bg-neutral-900/50 p-4">
+            <div className="text-xs text-neutral-500">Order total</div>
+            <div className="text-xl font-semibold tabular-nums mt-1">{formatAed(total)}</div>
+          </div>
+          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4">
+            <div className="text-xs text-neutral-500">Paid</div>
+            <div className="text-xl font-semibold tabular-nums mt-1 text-emerald-700 dark:text-emerald-400">
+              {formatAed(totalPaid)}
             </div>
-            {isInProgress && !(order.balanceAmountAed as Prisma.Decimal).isZero() && (
-              <ToggleBalanceButton paid={balancePaid} action={handleToggleBalance} />
-            )}
+            <div className="text-xs text-neutral-500 mt-0.5">{order.payments.length} payment{order.payments.length === 1 ? "" : "s"}</div>
+          </div>
+          <div className={`rounded-lg p-4 ${remaining.isPositive() ? "bg-amber-50 dark:bg-amber-900/20" : "bg-neutral-50 dark:bg-neutral-900/50"}`}>
+            <div className="text-xs text-neutral-500">Remaining</div>
+            <div className={`text-xl font-semibold tabular-nums mt-1 ${remaining.isPositive() ? "text-amber-700 dark:text-amber-400" : ""}`}>
+              {formatAed(remaining.isNegative() ? new Prisma.Decimal(0) : remaining)}
+            </div>
+            <div className="text-xs text-neutral-500 mt-0.5">
+              Advance expected {formatAed(order.advanceAmountAed)} ({(order.advancePct as Prisma.Decimal).toString()}%)
+            </div>
           </div>
         </div>
+
+        {/* Ledger */}
+        {order.payments.length > 0 && (
+          <Table>
+            <THead>
+              <TR>
+                <TH>Date</TH>
+                <TH>Paid by</TH>
+                <TH>Method</TH>
+                <TH>Notes</TH>
+                <TH className="text-right">Amount</TH>
+                <TH />
+              </TR>
+            </THead>
+            <tbody>
+              {order.payments.map((p) => {
+                const del = deleteOrderPayment.bind(null, id, p.id);
+                async function handleDelete() {
+                  "use server";
+                  await del();
+                }
+                return (
+                  <TR key={p.id}>
+                    <TD className="text-neutral-600 dark:text-neutral-400">{dateFmt.format(p.paidAt)}</TD>
+                    <TD className="font-medium">{p.payerName}</TD>
+                    <TD>{p.method ? ORDER_PAYMENT_METHOD_LABELS[p.method as OrderPaymentMethod] ?? p.method : <span className="text-neutral-400">—</span>}</TD>
+                    <TD className="text-neutral-600 dark:text-neutral-400">{p.notes ?? <span className="text-neutral-400">—</span>}</TD>
+                    <TD className="text-right tabular-nums font-medium text-emerald-700 dark:text-emerald-400">
+                      {formatAed(p.amountAed)}
+                    </TD>
+                    <TD className="text-right">
+                      {status !== "CANCELLED" && <DeleteOrderPaymentButton action={handleDelete} />}
+                    </TD>
+                  </TR>
+                );
+              })}
+            </tbody>
+            <tfoot className="bg-neutral-50 dark:bg-neutral-900/50 font-medium">
+              <TR>
+                <TD>Total paid</TD>
+                <TD />
+                <TD />
+                <TD />
+                <TD className="text-right tabular-nums">{formatAed(totalPaid)}</TD>
+                <TD />
+              </TR>
+            </tfoot>
+          </Table>
+        )}
+
+        {/* Add a payment */}
+        {status !== "CANCELLED" && (
+          <AddOrderPaymentForm
+            action={addPayment}
+            remaining={(remaining.isNegative() ? new Prisma.Decimal(0) : remaining).toNumber()}
+          />
+        )}
       </Card>
 
       <section>
