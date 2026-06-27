@@ -13,6 +13,7 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", resource: "dashboard", dot: "bg-indigo-500" },
+  { href: "/reports", label: "Reports", resource: "reports", dot: "bg-fuchsia-500" },
   { href: "/inventory", label: "Inventory", resource: "items", dot: "bg-cyan-500" },
   { href: "/shipments", label: "Shipments", resource: "shipments", dot: "bg-sky-500" },
   { href: "/suppliers", label: "Suppliers", resource: "suppliers", dot: "bg-teal-500" },

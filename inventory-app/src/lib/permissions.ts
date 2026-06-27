@@ -4,6 +4,7 @@ import type { Role } from "@/lib/domain";
 // individual users can override flags via the User.permissions JSON blob.
 export const RESOURCES = [
   "dashboard",
+  "reports",
   "items",
   "shipments",
   "suppliers",
@@ -31,6 +32,7 @@ const NONE: readonly Action[] = [];
 const defaults: Record<Role, PermissionMatrix> = {
   ADMIN: {
     dashboard: ALL,
+    reports: ALL,
     items: ALL,
     shipments: ALL,
     suppliers: ALL,
@@ -45,6 +47,7 @@ const defaults: Record<Role, PermissionMatrix> = {
   },
   PARTNER: {
     dashboard: ALL,
+    reports: VIEW_ONLY,
     items: ALL,
     shipments: ALL,
     suppliers: ALL,
@@ -59,6 +62,7 @@ const defaults: Record<Role, PermissionMatrix> = {
   },
   STAFF: {
     dashboard: NONE,
+    reports: NONE,
     items: ALL,
     shipments: NONE,
     suppliers: NONE,
