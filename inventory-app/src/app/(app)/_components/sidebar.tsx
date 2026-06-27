@@ -40,7 +40,7 @@ export function Sidebar({
   const visible = NAV.filter((item) => can(user, item.resource, "view"));
 
   return (
-    <aside className="w-56 shrink-0 border-r border-neutral-200 dark:border-neutral-800 bg-gradient-to-b from-white to-indigo-50/50 dark:from-neutral-900 dark:to-neutral-950 flex flex-col">
+    <aside className="w-56 shrink-0 border-r border-white/40 dark:border-white/10 bg-gradient-to-b from-white/70 to-indigo-50/40 dark:from-neutral-900/60 dark:to-neutral-950/60 backdrop-blur-xl flex flex-col">
       <div className="h-14 px-6 flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800">
         <span className="inline-block h-5 w-5 rounded-md bg-gradient-to-br from-indigo-500 to-violet-600 shadow-sm" />
         <span className="font-bold text-sm bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">

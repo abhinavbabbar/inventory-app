@@ -123,7 +123,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900",
+        "rounded-xl border border-white/60 dark:border-white/10 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-md shadow-sm shadow-indigo-500/5",
         className,
       )}
     >
@@ -186,7 +186,7 @@ export function Table({ children, className }: { children: React.ReactNode; clas
   return (
     <div
       className={cn(
-        "rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-x-auto",
+        "rounded-xl border border-neutral-200/70 dark:border-neutral-800/70 overflow-x-auto",
         className,
       )}
     >
@@ -197,7 +197,7 @@ export function Table({ children, className }: { children: React.ReactNode; clas
 
 export function THead({ children }: { children: React.ReactNode }) {
   return (
-    <thead className="bg-indigo-50/70 dark:bg-indigo-950/30 text-indigo-700/80 dark:text-indigo-300/80 text-xs uppercase tracking-wide">
+    <thead className="bg-gradient-to-r from-indigo-50/80 to-fuchsia-50/60 dark:from-indigo-950/40 dark:to-fuchsia-950/30 text-indigo-700/80 dark:text-indigo-300/80 text-xs uppercase tracking-wide">
       {children}
     </thead>
   );

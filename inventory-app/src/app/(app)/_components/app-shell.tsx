@@ -34,7 +34,7 @@ export function AppShell({ role, permissions, userName, signOutAction, children 
   }, [open]);
 
   return (
-    <div className="min-h-screen md:flex bg-gradient-to-br from-indigo-50/40 via-white to-cyan-50/30 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950">
+    <div className="min-h-screen md:flex bg-gradient-to-br from-indigo-100/60 via-fuchsia-50/40 to-cyan-100/50 dark:from-indigo-950/40 dark:via-neutral-950 dark:to-cyan-950/30">
       {/* Mobile overlay */}
       {open && (
         <button

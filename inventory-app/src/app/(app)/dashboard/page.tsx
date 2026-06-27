@@ -15,7 +15,6 @@ import {
   Card,
   EmptyState,
   PageHeader,
-  StatusPill,
   Table,
   TD,
   TH,
@@ -27,6 +26,15 @@ import { MonthlyChart } from "./_components/monthly-chart";
 export const metadata = { title: "Dashboard · Inventory & P&L" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
+
+// Vibrant gradient KPI tile.
+function Tile({ grad, children }: { grad: string; children: React.ReactNode }) {
+  return (
+    <div className={`rounded-xl p-4 text-white shadow-lg shadow-indigo-500/15 bg-gradient-to-br ${grad}`}>
+      {children}
+    </div>
+  );
+}
 
 export default async function DashboardPage() {
   const [kpis, monthly, topItems, recent, fxRateStr, liveRate] = await Promise.all([
@@ -64,7 +72,7 @@ export default async function DashboardPage() {
       {/* UAE Central Bank live FX rate */}
       <Link
         href="/settings"
-        className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-cyan-200 dark:border-cyan-900 bg-cyan-50 dark:bg-cyan-900/20 px-4 py-2.5 text-sm hover:bg-cyan-100/70 dark:hover:bg-cyan-900/30 transition-colors"
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-white/50 dark:border-white/10 bg-gradient-to-r from-cyan-50/80 to-indigo-50/70 dark:from-cyan-950/30 dark:to-indigo-950/30 backdrop-blur-md px-4 py-2.5 text-sm hover:from-cyan-100/80 hover:to-indigo-100/70 transition-colors"
       >
         <span className="font-medium text-cyan-800 dark:text-cyan-300">UAE Central Bank rate</span>
         <span className="tabular-nums text-neutral-700 dark:text-neutral-200">
@@ -85,120 +93,102 @@ export default async function DashboardPage() {
         </span>
       </Link>
 
-      {/* KPI cards */}
+      {/* KPI tiles */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <Card className="p-4 border-l-4 border-l-emerald-500">
-          <div className="text-xs text-neutral-500">Total invested</div>
-          <div className="text-xl font-semibold mt-1 tabular-nums text-emerald-700 dark:text-emerald-400">
+        <Tile grad="from-emerald-500 to-teal-600">
+          <div className="text-xs text-white/80">Total invested</div>
+          <div className="text-2xl font-bold mt-1 tabular-nums">
             {kpis.totalInvestedAed.isZero() ? "—" : formatAed(kpis.totalInvestedAed)}
           </div>
           {!kpis.totalInvestedAed.isZero() && inrEq(kpis.totalInvestedAed) && (
-            <div className="text-xs text-neutral-400 mt-1">{inrEq(kpis.totalInvestedAed)}</div>
+            <div className="text-xs text-white/70 mt-1">{inrEq(kpis.totalInvestedAed)}</div>
           )}
-        </Card>
-        <Card className="p-4 border-l-4 border-l-cyan-500">
-          <div className="text-xs text-neutral-500">Inventory value</div>
-          <div className="text-xl font-semibold mt-1 tabular-nums text-cyan-700 dark:text-cyan-400">
+        </Tile>
+        <Tile grad="from-cyan-500 to-blue-600">
+          <div className="text-xs text-white/80">Inventory value</div>
+          <div className="text-2xl font-bold mt-1 tabular-nums">
             {kpis.inventoryValueAed.isZero() ? "—" : formatAed(kpis.inventoryValueAed)}
           </div>
-          <div className="text-xs text-neutral-500 mt-1">
+          <div className="text-xs text-white/70 mt-1">
             {formatNumber(kpis.inventoryUnits)} units
             {!kpis.inventoryValueAed.isZero() && inrEq(kpis.inventoryValueAed) && (
-              <span className="text-neutral-400"> · {inrEq(kpis.inventoryValueAed)}</span>
+              <span> · {inrEq(kpis.inventoryValueAed)}</span>
             )}
           </div>
-        </Card>
-        <Card className="p-4 border-l-4 border-l-indigo-500">
-          <div className="text-xs text-neutral-500">MTD revenue</div>
-          <div className="text-xl font-semibold mt-1 tabular-nums text-indigo-700 dark:text-indigo-400">
+        </Tile>
+        <Tile grad="from-indigo-500 to-violet-600">
+          <div className="text-xs text-white/80">MTD revenue</div>
+          <div className="text-2xl font-bold mt-1 tabular-nums">
             {kpis.mtdRevenueAed.isZero() ? "—" : formatAed(kpis.mtdRevenueAed)}
           </div>
           {!kpis.mtdRevenueAed.isZero() && inrEq(kpis.mtdRevenueAed) && (
-            <div className="text-xs text-neutral-400 mt-1">{inrEq(kpis.mtdRevenueAed)}</div>
+            <div className="text-xs text-white/70 mt-1">{inrEq(kpis.mtdRevenueAed)}</div>
           )}
-        </Card>
-        <Card className={`p-4 border-l-4 ${kpis.mtdGrossProfitAed.isNegative() ? "border-l-red-500" : "border-l-violet-500"}`}>
-          <div className="text-xs text-neutral-500">MTD gross profit</div>
-          <div
-            className={`text-xl font-semibold mt-1 tabular-nums ${
-              kpis.mtdGrossProfitAed.isNegative() ? "text-red-600" : "text-violet-700 dark:text-violet-400"
-            }`}
-          >
+        </Tile>
+        <Tile grad={kpis.mtdGrossProfitAed.isNegative() ? "from-rose-500 to-red-600" : "from-violet-500 to-fuchsia-600"}>
+          <div className="text-xs text-white/80">MTD gross profit</div>
+          <div className="text-2xl font-bold mt-1 tabular-nums">
             {kpis.mtdGrossProfitAed.isZero() ? "—" : formatAed(kpis.mtdGrossProfitAed)}
           </div>
-          <div className="text-xs text-neutral-500 mt-1">
+          <div className="text-xs text-white/70 mt-1">
             COGS {formatAed(kpis.mtdRevenueAed.sub(kpis.mtdGrossProfitAed))}
           </div>
-        </Card>
-        <Card className={`p-4 border-l-4 ${kpis.mtdNetProfitAed.isNegative() ? "border-l-red-500" : "border-l-green-500"}`}>
-          <div className="text-xs text-neutral-500">MTD net profit</div>
-          <div
-            className={`text-xl font-semibold mt-1 tabular-nums ${
-              kpis.mtdNetProfitAed.isNegative() ? "text-red-600" : "text-green-700 dark:text-green-400"
-            }`}
-          >
+        </Tile>
+        <Tile grad={kpis.mtdNetProfitAed.isNegative() ? "from-rose-500 to-red-600" : "from-green-500 to-emerald-600"}>
+          <div className="text-xs text-white/80">MTD net profit</div>
+          <div className="text-2xl font-bold mt-1 tabular-nums">
             {kpis.mtdNetProfitAed.isZero() ? "—" : formatAed(kpis.mtdNetProfitAed)}
           </div>
-          <div className="text-xs text-neutral-500 mt-1">
+          <div className="text-xs text-white/70 mt-1">
             Opex {formatAed(kpis.mtdOpexAed)}
             {!kpis.mtdNetProfitAed.isZero() && inrEq(kpis.mtdNetProfitAed) && (
-              <span className="text-neutral-400"> · {inrEq(kpis.mtdNetProfitAed)}</span>
+              <span> · {inrEq(kpis.mtdNetProfitAed)}</span>
             )}
           </div>
-        </Card>
-        <Card className="p-4 border-l-4 border-l-amber-500">
-          <div className="text-xs text-neutral-500">Orders in progress</div>
-          <div className="text-xl font-semibold mt-1 tabular-nums">
+        </Tile>
+        <Tile grad="from-amber-500 to-orange-600">
+          <div className="text-xs text-white/80">Orders in progress</div>
+          <div className="text-2xl font-bold mt-1 tabular-nums">
             {kpis.inProgressOrdersCount > 0 ? kpis.inProgressOrdersCount : "—"}
           </div>
-          <div className="mt-1 flex flex-wrap gap-1 text-xs">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
             {kpis.inProgressOrdersCount > 0 && (
-              <Link href="/orders?status=IN_PROGRESS" className="text-neutral-500 hover:underline">
+              <Link href="/orders?status=IN_PROGRESS" className="text-white/90 hover:underline">
                 {formatAed(kpis.inProgressOrdersValueAed)}
               </Link>
             )}
             {kpis.pendingAdvanceCount > 0 && (
-              <StatusPill status="warn" label={`${kpis.pendingAdvanceCount} pending advance`} />
+              <span className="rounded-full bg-white/25 px-2 py-0.5">{kpis.pendingAdvanceCount} pending advance</span>
             )}
-            {kpis.inProgressOrdersCount === 0 && (
-              <span className="text-xs text-neutral-500">None</span>
-            )}
+            {kpis.inProgressOrdersCount === 0 && <span className="text-white/70">None</span>}
           </div>
-        </Card>
-        <Card className={`p-4 border-l-4 ${kpis.outCount > 0 ? "border-l-red-500" : kpis.shortageCount > 0 ? "border-l-amber-500" : "border-l-neutral-300 dark:border-l-neutral-700"}`}>
-          <div className="text-xs text-neutral-500">Stock alerts</div>
-          <div className="text-xl font-semibold mt-1 tabular-nums">
-            {kpis.shortageCount + kpis.outCount > 0
-              ? kpis.shortageCount + kpis.outCount
-              : "—"}
+        </Tile>
+        <Tile grad={kpis.outCount > 0 ? "from-rose-500 to-red-600" : kpis.shortageCount > 0 ? "from-amber-500 to-orange-600" : "from-slate-400 to-slate-500"}>
+          <div className="text-xs text-white/80">Stock alerts</div>
+          <div className="text-2xl font-bold mt-1 tabular-nums">
+            {kpis.shortageCount + kpis.outCount > 0 ? kpis.shortageCount + kpis.outCount : "—"}
           </div>
-          <div className="mt-1 flex gap-1 flex-wrap">
-            {kpis.outCount > 0 && (
-              <StatusPill status="bad" label={`${kpis.outCount} out`} />
-            )}
-            {kpis.shortageCount > 0 && (
-              <StatusPill status="warn" label={`${kpis.shortageCount} short`} />
-            )}
-            {kpis.outCount === 0 && kpis.shortageCount === 0 && (
-              <span className="text-xs text-neutral-500">All in stock</span>
-            )}
+          <div className="mt-1 flex gap-1.5 flex-wrap text-xs">
+            {kpis.outCount > 0 && <span className="rounded-full bg-white/25 px-2 py-0.5">{kpis.outCount} out</span>}
+            {kpis.shortageCount > 0 && <span className="rounded-full bg-white/25 px-2 py-0.5">{kpis.shortageCount} short</span>}
+            {kpis.outCount === 0 && kpis.shortageCount === 0 && <span className="text-white/70">All in stock</span>}
           </div>
-        </Card>
-        <Card className={`p-4 border-l-4 ${kpis.supplierDuesInr.greaterThan(0) ? "border-l-amber-500" : "border-l-neutral-300 dark:border-l-neutral-700"}`}>
-          <div className="text-xs text-neutral-500">Supplier dues</div>
-          <div className={`text-xl font-semibold mt-1 tabular-nums ${kpis.supplierDuesInr.greaterThan(0) ? "text-amber-700 dark:text-amber-400" : ""}`}>
+        </Tile>
+        <Tile grad={kpis.supplierDuesInr.greaterThan(0) ? "from-fuchsia-500 to-pink-600" : "from-slate-400 to-slate-500"}>
+          <div className="text-xs text-white/80">Supplier dues</div>
+          <div className="text-2xl font-bold mt-1 tabular-nums">
             {kpis.supplierDuesInr.greaterThan(0) ? formatInr(kpis.supplierDuesInr) : "—"}
           </div>
           <div className="mt-1 flex flex-wrap gap-1 text-xs">
             {kpis.suppliersWithDues > 0 ? (
-              <Link href="/suppliers" className="text-neutral-500 hover:underline">
+              <Link href="/suppliers" className="text-white/90 hover:underline">
                 {kpis.suppliersWithDues} supplier{kpis.suppliersWithDues > 1 ? "s" : ""} owed
               </Link>
             ) : (
-              <span className="text-neutral-500">All settled</span>
+              <span className="text-white/70">All settled</span>
             )}
           </div>
-        </Card>
+        </Tile>
       </div>
 
       {/* Monthly chart */}
