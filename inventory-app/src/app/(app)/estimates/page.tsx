@@ -9,7 +9,7 @@ import { formatAed, sumDecimal } from "@/lib/money";
 import { ESTIMATE_STATUS_LABELS, type EstimateStatus } from "@/lib/domain";
 import { Card, EmptyState, LinkButton, PageHeader, StatusPill, Table, TD, TH, THead, TR } from "@/components/ui";
 
-export const metadata = { title: "Estimates · Inventory & P&L" };
+export const metadata = { title: "Estimates · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 

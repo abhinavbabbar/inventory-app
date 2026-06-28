@@ -20,7 +20,7 @@ import {
 import { ShareDonut } from "./_components/share-donut";
 import { colorAt } from "@/lib/chart-colors";
 
-export const metadata = { title: "Partners · Inventory & P&L" };
+export const metadata = { title: "Partners · BookWise" };
 
 export default async function PartnersPage() {
   const session = await auth();

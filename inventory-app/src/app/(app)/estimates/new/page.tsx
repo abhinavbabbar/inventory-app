@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/ui";
 
 import { EstimateForm } from "./_components/estimate-form";
 
-export const metadata = { title: "New estimate · Inventory & P&L" };
+export const metadata = { title: "New estimate · BookWise" };
 
 export default async function NewEstimatePage() {
   const session = await auth();

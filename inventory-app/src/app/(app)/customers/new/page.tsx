@@ -2,7 +2,7 @@ import { PageHeader } from "@/components/ui";
 import { CustomerForm } from "../_components/customer-form";
 import { createCustomer } from "../actions";
 
-export const metadata = { title: "New customer · Inventory & P&L" };
+export const metadata = { title: "New customer · BookWise" };
 
 export default function NewCustomerPage() {
   return (

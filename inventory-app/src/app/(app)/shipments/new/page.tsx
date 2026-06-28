@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { EmptyState, LinkButton, PageHeader } from "@/components/ui";
 import { ShipmentForm } from "./_components/shipment-form";
 
-export const metadata = { title: "New shipment · Inventory & P&L" };
+export const metadata = { title: "New shipment · BookWise" };
 
 export default async function NewShipmentPage({
   searchParams,

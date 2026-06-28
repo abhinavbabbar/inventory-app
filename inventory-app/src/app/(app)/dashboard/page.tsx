@@ -23,7 +23,7 @@ import {
 } from "@/components/ui";
 import { MonthlyChart } from "./_components/monthly-chart";
 
-export const metadata = { title: "Dashboard · Inventory & P&L" };
+export const metadata = { title: "Dashboard · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 

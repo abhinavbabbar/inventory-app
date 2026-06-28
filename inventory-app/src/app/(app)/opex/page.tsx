@@ -17,7 +17,7 @@ import {
   TR,
 } from "@/components/ui";
 
-export const metadata = { title: "Opex · Inventory & P&L" };
+export const metadata = { title: "Opex · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 

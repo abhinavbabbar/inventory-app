@@ -19,7 +19,7 @@ import {
 } from "@/components/ui";
 import { setShipmentSupplier } from "../actions";
 
-export const metadata = { title: "Shipment · Inventory & P&L" };
+export const metadata = { title: "Shipment · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 

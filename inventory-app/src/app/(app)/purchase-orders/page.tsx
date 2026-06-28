@@ -9,7 +9,7 @@ import { formatInr, sumDecimal } from "@/lib/money";
 import { PO_STATUS_LABELS, type PoStatus } from "@/lib/domain";
 import { Card, EmptyState, LinkButton, PageHeader, StatusPill, Table, TD, TH, THead, TR } from "@/components/ui";
 
-export const metadata = { title: "Purchase orders · Inventory & P&L" };
+export const metadata = { title: "Purchase orders · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 

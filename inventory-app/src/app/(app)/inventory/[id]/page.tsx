@@ -19,7 +19,7 @@ import { ItemForm } from "../_components/item-form";
 import { updateItem, toggleItemActive } from "../actions";
 import { ToggleActiveButton } from "../_components/toggle-active-button";
 
-export const metadata = { title: "Item · Inventory & P&L" };
+export const metadata = { title: "Item · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", {
   dateStyle: "medium",

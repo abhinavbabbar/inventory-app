@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui";
 import { SupplierForm } from "../_components/supplier-form";
 import { createSupplier } from "../actions";
 
-export const metadata = { title: "New supplier · Inventory & P&L" };
+export const metadata = { title: "New supplier · BookWise" };
 
 export default async function NewSupplierPage() {
   const session = await auth();

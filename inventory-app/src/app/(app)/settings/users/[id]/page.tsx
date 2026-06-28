@@ -10,7 +10,7 @@ import { ResetPasswordForm } from "../_components/reset-password-form";
 import { ToggleActiveButton } from "../_components/toggle-active-button";
 import { updateUser, resetUserPassword, toggleUserActive } from "../actions";
 
-export const metadata = { title: "Edit user · Inventory & P&L" };
+export const metadata = { title: "Edit user · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 

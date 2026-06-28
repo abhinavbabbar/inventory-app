@@ -6,7 +6,7 @@ import { OpexForm } from "../_components/opex-form";
 import { DeleteOpexButton } from "../_components/delete-opex-button";
 import { updateOpex, deleteOpex } from "../actions";
 
-export const metadata = { title: "Edit opex · Inventory & P&L" };
+export const metadata = { title: "Edit opex · BookWise" };
 
 export default async function OpexDetailPage({
   params,

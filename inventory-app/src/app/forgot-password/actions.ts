@@ -55,7 +55,7 @@ export async function requestPasswordReset(
 
   const baseUrl = await getBaseUrl();
   const link = `${baseUrl}/reset-password?token=${raw}`;
-  const brand = (await getCompanyInfo()).name || "Inventory & P&L";
+  const brand = (await getCompanyInfo()).name || "BookWise";
 
   const result = await sendEmail({
     to: user.email,

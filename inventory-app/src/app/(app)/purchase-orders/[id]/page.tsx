@@ -15,7 +15,7 @@ import { Card, LinkButton, PageHeader, StatTile, StatusPill, Table, TD, TH, THea
 import { setPoStatus, deletePurchaseOrder, emailPurchaseOrder } from "../actions";
 import { PoControls } from "./_components/po-controls";
 
-export const metadata = { title: "Purchase order · Inventory & P&L" };
+export const metadata = { title: "Purchase order · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 
@@ -49,7 +49,7 @@ export default async function PurchaseOrderDetailPage({ params }: { params: Prom
   const canReceive = !received && !cancelled;
 
   const company = await getCompanyInfo();
-  const brand = company.name || "Inventory & P&L";
+  const brand = company.name || "BookWise";
   const waMessage = `Hello, here's purchase order ${po.poNumber} from ${brand}. Total: ${formatInr(total)}.`;
   const waHref = waLink(po.supplier.phone, waMessage);
   const emailThis = emailPurchaseOrder.bind(null, id);

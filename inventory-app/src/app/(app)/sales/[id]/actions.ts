@@ -52,7 +52,7 @@ export async function emailInvoice(
     })),
   });
 
-  const brand = company.name || "Inventory & P&L";
+  const brand = company.name || "BookWise";
   const result = await sendEmail({
     to: sale.customer.email,
     subject: `Invoice ${sale.invoiceNumber} from ${brand}`,

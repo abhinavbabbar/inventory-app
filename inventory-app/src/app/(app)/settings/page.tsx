@@ -12,7 +12,7 @@ import { VatForm } from "./_components/vat-form";
 import { FxRateForm } from "./_components/fx-form";
 import { FxLiveCard } from "./_components/fx-live-card";
 
-export const metadata = { title: "Settings · Inventory & P&L" };
+export const metadata = { title: "Settings · BookWise" };
 
 export default async function SettingsPage() {
   const session = await auth();

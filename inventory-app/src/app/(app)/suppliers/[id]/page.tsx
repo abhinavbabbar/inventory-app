@@ -30,7 +30,7 @@ import {
   deleteSupplierPayment,
 } from "../actions";
 
-export const metadata = { title: "Supplier · Inventory & P&L" };
+export const metadata = { title: "Supplier · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 

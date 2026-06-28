@@ -25,7 +25,7 @@ import { DeleteContributionButton } from "../_components/delete-contribution-but
 import { ContributionChart } from "../_components/contribution-chart";
 import { updatePartner, removePartner, addContribution, deleteContribution } from "../actions";
 
-export const metadata = { title: "Edit partner · Inventory & P&L" };
+export const metadata = { title: "Edit partner · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 

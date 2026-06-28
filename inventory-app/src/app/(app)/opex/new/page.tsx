@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { OpexForm } from "../_components/opex-form";
 import { createOpex } from "../actions";
 
-export const metadata = { title: "New opex entry · Inventory & P&L" };
+export const metadata = { title: "New opex entry · BookWise" };
 
 export default async function NewOpexPage() {
   const partners = await prisma.partner.findMany({

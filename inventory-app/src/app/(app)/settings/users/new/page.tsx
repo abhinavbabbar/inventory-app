@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { PageHeader } from "@/components/ui";
 import { NewUserForm } from "../_components/new-user-form";
 
-export const metadata = { title: "New user · Inventory & P&L" };
+export const metadata = { title: "New user · BookWise" };
 
 export default async function NewUserPage() {
   const session = await auth();

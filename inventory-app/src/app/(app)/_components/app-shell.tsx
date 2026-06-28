@@ -78,7 +78,7 @@ export function AppShell({ role, permissions, userName, signOutAction, children 
               </span>
             </div>
             <div className="text-sm font-bold sm:hidden bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">
-              Inventory &amp; P&amp;L
+              BookWise
             </div>
           </div>
           <form action={signOutAction}>

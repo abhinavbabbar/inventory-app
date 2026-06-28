@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui";
 import { getDefaultFxRate } from "@/lib/settings";
 import { NewPartnerForm } from "../_components/new-partner-form";
 
-export const metadata = { title: "New partner · Inventory & P&L" };
+export const metadata = { title: "New partner · BookWise" };
 
 export default async function NewPartnerPage() {
   const session = await auth();

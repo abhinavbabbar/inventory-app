@@ -4,7 +4,7 @@ import { getVatSettings } from "@/lib/settings";
 import { EmptyState, LinkButton, PageHeader } from "@/components/ui";
 import { OrderForm } from "./_components/order-form";
 
-export const metadata = { title: "New order · Inventory & P&L" };
+export const metadata = { title: "New order · BookWise" };
 
 type SearchParams = { leadId?: string };
 

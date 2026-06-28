@@ -33,7 +33,7 @@ import {
 } from "../_components/order-action-buttons";
 import { AddOrderPaymentForm, DeleteOrderPaymentButton } from "../_components/payment-ledger";
 
-export const metadata = { title: "Order · Inventory & P&L" };
+export const metadata = { title: "Order · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 const dateTimeFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" });
@@ -98,7 +98,7 @@ export default async function OrderDetailPage({
   const addPayment = addOrderPayment.bind(null, id);
   const emailReminder = sendOrderReminderEmail.bind(null, id);
 
-  const brand = (await getCompanyInfo()).name || "Inventory & P&L";
+  const brand = (await getCompanyInfo()).name || "BookWise";
   const reminderMsg = `Hi ${order.customer.name}, a friendly reminder that order ${order.orderNumber} has an outstanding balance of ${formatAed(remaining.isNegative() ? new Prisma.Decimal(0) : remaining)}. Thank you!`;
   const reminderWa = remaining.isPositive() ? waLink(order.customer.mobile, reminderMsg) : null;
 

@@ -175,7 +175,7 @@ export async function emailPurchaseOrder(id: string, _prev: EmailState, _fd: For
     lines: po.lines.map((l) => ({ description: l.item.name, sku: l.item.sku, quantity: l.quantity, unitPurchasePriceInr: l.unitPurchasePriceInr })),
   });
 
-  const brand = company.name || "Inventory & P&L";
+  const brand = company.name || "BookWise";
   const result = await sendEmail({
     to: po.supplier.email,
     subject: `Purchase order ${po.poNumber} from ${brand}`,

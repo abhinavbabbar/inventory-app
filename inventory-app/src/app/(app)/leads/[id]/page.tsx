@@ -9,7 +9,7 @@ import { LeadForm } from "../_components/lead-form";
 import { DeleteLeadButton } from "../_components/delete-lead-button";
 import { updateLead, deleteLead } from "../actions";
 
-export const metadata = { title: "Edit lead · Inventory & P&L" };
+export const metadata = { title: "Edit lead · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { ResetPasswordForm } from "./reset-password-form";
 
-export const metadata = { title: "Reset password · Inventory & P&L" };
+export const metadata = { title: "Reset password · BookWise" };
 
 export default async function ResetPasswordPage({
   searchParams,

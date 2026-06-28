@@ -19,7 +19,7 @@ import { CustomerForm } from "../_components/customer-form";
 import { ToggleActiveButton } from "../_components/toggle-active-button";
 import { updateCustomer, toggleCustomerActive } from "../actions";
 
-export const metadata = { title: "Customer · Inventory & P&L" };
+export const metadata = { title: "Customer · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 

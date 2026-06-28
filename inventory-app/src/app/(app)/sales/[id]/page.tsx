@@ -21,7 +21,7 @@ import {
 
 import { emailInvoice } from "./actions";
 
-export const metadata = { title: "Sale · Inventory & P&L" };
+export const metadata = { title: "Sale · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 
@@ -52,7 +52,7 @@ export default async function SaleDetailPage({
   const vatRate = (sale.vatRatePct as Prisma.Decimal).toString();
 
   const company = await getCompanyInfo();
-  const brand = company.name || "Inventory & P&L";
+  const brand = company.name || "BookWise";
   const waMessage = `Hi ${sale.customer?.name ?? "there"}, here's your invoice ${sale.invoiceNumber} from ${brand}. Total: ${formatAed(total)}. Thank you!`;
   const waHref = waLink(sale.customer?.mobile, waMessage);
   const emailThis = emailInvoice.bind(null, sale.id);

@@ -19,7 +19,7 @@ import {
   TR,
 } from "@/components/ui";
 
-export const metadata = { title: "Suppliers · Inventory & P&L" };
+export const metadata = { title: "Suppliers · BookWise" };
 
 export default async function SuppliersPage() {
   const session = await auth();

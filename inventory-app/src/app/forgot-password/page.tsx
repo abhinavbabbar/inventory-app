@@ -1,6 +1,6 @@
 import { ForgotPasswordForm } from "./forgot-password-form";
 
-export const metadata = { title: "Forgot password · Inventory & P&L" };
+export const metadata = { title: "Forgot password · BookWise" };
 
 export default function ForgotPasswordPage() {
   return (

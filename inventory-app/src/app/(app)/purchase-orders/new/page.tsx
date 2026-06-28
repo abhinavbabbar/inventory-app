@@ -7,7 +7,7 @@ import { EmptyState, LinkButton, PageHeader } from "@/components/ui";
 
 import { PoForm } from "./_components/po-form";
 
-export const metadata = { title: "New purchase order · Inventory & P&L" };
+export const metadata = { title: "New purchase order · BookWise" };
 
 export default async function NewPurchaseOrderPage() {
   const session = await auth();

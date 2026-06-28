@@ -300,7 +300,7 @@ export async function emailEstimate(id: string, _prev: EmailState, _fd: FormData
     })),
   });
 
-  const brand = company.name || "Inventory & P&L";
+  const brand = company.name || "BookWise";
   const result = await sendEmail({
     to: estimate.customer.email,
     subject: `Quotation ${estimate.estimateNumber} from ${brand}`,

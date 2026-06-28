@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Inventory & P&L",
+  title: "BookWise",
   description: "Inventory and partnership P&L for India → UAE imports",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

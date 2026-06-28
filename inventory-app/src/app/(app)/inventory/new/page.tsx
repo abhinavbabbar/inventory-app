@@ -2,7 +2,7 @@ import { PageHeader } from "@/components/ui";
 import { ItemForm } from "../_components/item-form";
 import { createItem } from "../actions";
 
-export const metadata = { title: "New item · Inventory & P&L" };
+export const metadata = { title: "New item · BookWise" };
 
 export default function NewItemPage() {
   return (

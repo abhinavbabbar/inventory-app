@@ -4,7 +4,7 @@ import { getVatSettings } from "@/lib/settings";
 import { EmptyState, LinkButton, PageHeader } from "@/components/ui";
 import { SaleForm } from "./_components/sale-form";
 
-export const metadata = { title: "New sale · Inventory & P&L" };
+export const metadata = { title: "New sale · BookWise" };
 
 export default async function NewSalePage() {
   const [customers, items, vatSettings] = await Promise.all([

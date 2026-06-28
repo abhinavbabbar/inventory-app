@@ -15,7 +15,7 @@ import { Card, LinkButton, PageHeader, StatusPill, Table, TD, TH, THead, TR } fr
 import { setEstimateStatus, convertEstimateToOrder, deleteEstimate, emailEstimate } from "../actions";
 import { EstimateControls } from "./_components/estimate-controls";
 
-export const metadata = { title: "Estimate · Inventory & P&L" };
+export const metadata = { title: "Estimate · BookWise" };
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
 
@@ -48,7 +48,7 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
   const converted = st === "CONVERTED";
 
   const company = await getCompanyInfo();
-  const brand = company.name || "Inventory & P&L";
+  const brand = company.name || "BookWise";
   const waMessage = `Hi ${estimate.customer.name}, here's your quotation ${estimate.estimateNumber} from ${brand}. Total: ${formatAed(total)}.`;
   const waHref = waLink(estimate.customer.mobile, waMessage);
 

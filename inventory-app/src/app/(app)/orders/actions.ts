@@ -399,7 +399,7 @@ export async function sendOrderReminderEmail(
   if (!order.customer.email) return { error: "This customer has no email address on file." };
   if (!isEmailConfigured()) return { error: "Email isn't set up yet (add RESEND_API_KEY)." };
 
-  const brand = (await getCompanyInfo()).name || "Inventory & P&L";
+  const brand = (await getCompanyInfo()).name || "BookWise";
   const result = await sendEmail({
     to: order.customer.email,
     subject: `Payment reminder · order ${order.orderNumber}`,

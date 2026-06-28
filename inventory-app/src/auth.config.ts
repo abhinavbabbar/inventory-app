@@ -11,6 +11,10 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
+
+      // The marketing landing page at "/" is public for everyone (no bounce).
+      if (nextUrl.pathname === "/") return true;
+
       const publicPaths = ["/login", "/forgot-password", "/reset-password"];
       const isPublic = publicPaths.some((p) => nextUrl.pathname.startsWith(p));
 

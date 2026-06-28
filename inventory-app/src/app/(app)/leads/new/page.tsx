@@ -2,7 +2,7 @@ import { PageHeader } from "@/components/ui";
 import { LeadForm } from "../_components/lead-form";
 import { createLead } from "../actions";
 
-export const metadata = { title: "New lead · Inventory & P&L" };
+export const metadata = { title: "New lead · BookWise" };
 
 export default function NewLeadPage() {
   return (

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui";
 
 export const metadata = {
-  title: "Inventory · Inventory & P&L",
+  title: "Inventory · BookWise",
 };
 
 type SearchParams = {

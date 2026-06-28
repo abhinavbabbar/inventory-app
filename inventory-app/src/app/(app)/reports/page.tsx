@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { can } from "@/lib/permissions";
 import { Card, PageHeader } from "@/components/ui";
 
-export const metadata = { title: "Reports · Inventory & P&L" };
+export const metadata = { title: "Reports · BookWise" };
 
 const REPORTS = [
   {

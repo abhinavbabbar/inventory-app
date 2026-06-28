@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 
 export const metadata = {
-  title: "Sign in · Inventory & P&L",
+  title: "Sign in · BookWise",
 };
 
 async function authenticate(formData: FormData) {
@@ -45,9 +45,9 @@ export default async function LoginPage({
         <div className="mb-8 text-center">
           <div className="mx-auto mb-3 h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-sm" />
           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-600 dark:from-indigo-400 dark:via-violet-400 dark:to-cyan-400 bg-clip-text text-transparent">
-            Inventory &amp; P&amp;L
+            BookWise
           </h1>
-          <p className="text-sm text-neutral-500 mt-1">Sign in to continue</p>
+          <p className="text-sm text-neutral-500 mt-1">Your digital accountant</p>
         </div>
 
         {justReset && (
