@@ -3,7 +3,7 @@ import Link from "next/link";
 export const metadata = {
   title: "BookWise — Your digital accountant",
   description:
-    "BookWise is the all-in-one inventory, invoicing and accounting app for UAE traders — from stock and purchase orders to invoices, VAT and live FX.",
+    "BookWise is the all-in-one inventory, invoicing and accounting app — from stock and purchase orders to invoices, VAT, reports and live FX.",
 };
 
 const features = [
@@ -12,7 +12,7 @@ const features = [
   { title: "Estimates → orders", desc: "Quote, convert, dispatch — one flow.", grad: "from-violet-500 to-fuchsia-600", icon: "M4 5h16M4 12h16M4 19h10" },
   { title: "Purchase orders", desc: "Order, receive into shipments, track dues.", grad: "from-blue-500 to-indigo-600", icon: "M3 3h2l2 13h11l2-8H7M9 21h0M18 21h0" },
   { title: "Reports & P&L", desc: "Profit, VAT return, AR/AP aging.", grad: "from-emerald-500 to-teal-600", icon: "M4 19V5m4 14V9m4 10V7m4 12v-6m4 6V11" },
-  { title: "Live INR ⇄ AED FX", desc: "UAE Central Bank rate, built-in converter.", grad: "from-amber-500 to-orange-600", icon: "M4 12a8 8 0 0114-5m2 5a8 8 0 01-14 5M8 7H4V3m12 14h4v4" },
+  { title: "Live multi-currency FX", desc: "Real-time rates with a built-in converter.", grad: "from-amber-500 to-orange-600", icon: "M4 12a8 8 0 0114-5m2 5a8 8 0 01-14 5M8 7H4V3m12 14h4v4" },
   { title: "Partner P&L", desc: "Multi-currency capital and profit split.", grad: "from-fuchsia-500 to-pink-600", icon: "M17 20v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M10 6a3 3 0 100 6 3 3 0 000-6zm11 14v-2a4 4 0 00-3-3.8" },
   { title: "Email & WhatsApp", desc: "Send invoices and chase payments instantly.", grad: "from-green-500 to-emerald-600", icon: "M3 7l9 6 9-6M3 7v10h18V7" },
 ];
@@ -49,19 +49,18 @@ export default function LandingPage() {
         <section className="mx-auto max-w-6xl px-6 pt-12 pb-8 grid lg:grid-cols-2 gap-10 items-center">
           <div className="bw-fade-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-indigo-200 dark:border-indigo-900 bg-white/60 dark:bg-white/5 backdrop-blur px-3 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Built for UAE traders importing from India
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Built for modern businesses
             </span>
             <h1 className="mt-5 text-4xl sm:text-5xl font-bold leading-tight">
-              Run your whole trade from{" "}
               <span className="bw-gradient-anim bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-cyan-600 dark:from-indigo-400 dark:via-fuchsia-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                one place
-              </span>
-              .
+                One-stop
+              </span>{" "}
+              solution for your business.
             </h1>
             <p className="mt-3 text-lg font-medium text-neutral-600 dark:text-neutral-300">Your digital accountant.</p>
             <p className="mt-4 text-neutral-600 dark:text-neutral-400 max-w-md">
-              Inventory, purchase orders, invoices with VAT, partner P&amp;L and live INR⇄AED rates — beautifully simple,
-              from stock to invoice.
+              Inventory, purchase orders, invoices with VAT, partner P&amp;L and live multi-currency rates — beautifully
+              simple, from stock to invoice.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link href="/login" className="h-11 px-6 inline-flex items-center rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/25">
@@ -79,7 +78,7 @@ export default function LandingPage() {
             <div className="bw-float absolute left-2 top-6 w-44 rounded-2xl p-4 text-white shadow-xl shadow-indigo-500/20 bg-gradient-to-br from-indigo-500 to-violet-600">
               <div className="text-xs text-white/80">MTD revenue</div>
               <div className="text-2xl font-bold tabular-nums mt-1">AED 24,500</div>
-              <div className="text-xs text-white/70 mt-1">≈ ₹6,29,000</div>
+              <div className="text-xs text-white/70 mt-1">this month</div>
             </div>
             <div className="bw-float-slow bw-delay-2 absolute right-2 top-0 w-44 rounded-2xl p-4 text-white shadow-xl shadow-emerald-500/20 bg-gradient-to-br from-emerald-500 to-teal-600">
               <div className="text-xs text-white/80">Net profit</div>
@@ -93,8 +92,8 @@ export default function LandingPage() {
             </div>
             <div className="bw-float-slow bw-delay-1 absolute right-6 bottom-10 w-40 rounded-2xl p-4 shadow-xl border border-white/60 dark:border-white/10 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md">
               <div className="text-xs text-neutral-500">Live FX</div>
-              <div className="text-lg font-bold tabular-nums mt-1 text-cyan-600 dark:text-cyan-400">1 AED = ₹25.69</div>
-              <div className="text-[11px] text-neutral-400 mt-1">UAE Central Bank</div>
+              <div className="text-lg font-bold tabular-nums mt-1 text-cyan-600 dark:text-cyan-400">1 USD = 3.67 AED</div>
+              <div className="text-[11px] text-neutral-400 mt-1">Live central-bank rate</div>
             </div>
           </div>
         </section>
@@ -112,8 +111,8 @@ export default function LandingPage() {
 
         {/* Features */}
         <section id="features" className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center">Everything a trading business needs</h2>
-          <p className="mt-2 text-center text-neutral-600 dark:text-neutral-400">One app, from the India buy-side to the UAE sell-side.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-center">Everything your business needs</h2>
+          <p className="mt-2 text-center text-neutral-600 dark:text-neutral-400">From stock to invoice to profit — all in one place.</p>
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map((f) => (
               <div key={f.title} className="rounded-2xl border border-white/60 dark:border-white/10 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-md p-5 shadow-sm hover:shadow-md transition-shadow">
