@@ -41,6 +41,16 @@ export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export const ORDER_STATUSES = ["IN_PROGRESS", "DISPATCHED", "CANCELLED"] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+export const PO_STATUSES = ["DRAFT", "SENT", "CONFIRMED", "RECEIVED", "CANCELLED"] as const;
+export type PoStatus = (typeof PO_STATUSES)[number];
+export const PO_STATUS_LABELS: Record<PoStatus, string> = {
+  DRAFT: "Draft",
+  SENT: "Sent",
+  CONFIRMED: "Confirmed",
+  RECEIVED: "Received",
+  CANCELLED: "Cancelled",
+};
+
 export const ESTIMATE_STATUSES = ["DRAFT", "SENT", "ACCEPTED", "DECLINED", "CONVERTED"] as const;
 export type EstimateStatus = (typeof ESTIMATE_STATUSES)[number];
 

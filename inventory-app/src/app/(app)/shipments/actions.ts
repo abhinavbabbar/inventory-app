@@ -87,6 +87,12 @@ export async function createShipment(
 
   const data = parsed.data;
 
+  // Optional: this shipment is the receipt for a purchase order.
+  const fromPOId = (() => {
+    const v = formData.get("fromPurchaseOrderId");
+    return typeof v === "string" && v.length > 0 ? v : null;
+  })();
+
   // Ensure all itemIds exist
   const ids = [...new Set(data.lines.map((l) => l.itemId))];
   const items = await prisma.item.findMany({ where: { id: { in: ids } }, select: { id: true } });
@@ -178,12 +184,24 @@ export async function createShipment(
       });
     }
 
+    // Mark the source purchase order as received and link it to this shipment.
+    if (fromPOId) {
+      const po = await tx.purchaseOrder.findUnique({ where: { id: fromPOId }, select: { status: true } });
+      if (po && po.status !== "RECEIVED" && po.status !== "CANCELLED") {
+        await tx.purchaseOrder.update({
+          where: { id: fromPOId },
+          data: { status: "RECEIVED", receivedShipmentId: shipment.id, receivedAt: new Date() },
+        });
+      }
+    }
+
     return shipment;
   });
 
   revalidatePath("/shipments");
   revalidatePath("/inventory");
   revalidatePath("/suppliers");
+  revalidatePath("/purchase-orders");
   revalidatePath("/dashboard");
   redirect(`/shipments/${result.id}`);
 }

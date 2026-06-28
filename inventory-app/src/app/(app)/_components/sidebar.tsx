@@ -16,6 +16,7 @@ const NAV: NavItem[] = [
   { href: "/reports", label: "Reports", resource: "reports", dot: "bg-fuchsia-500" },
   { href: "/inventory", label: "Inventory", resource: "items", dot: "bg-cyan-500" },
   { href: "/shipments", label: "Shipments", resource: "shipments", dot: "bg-sky-500" },
+  { href: "/purchase-orders", label: "Purchase orders", resource: "purchaseOrders", dot: "bg-blue-500" },
   { href: "/suppliers", label: "Suppliers", resource: "suppliers", dot: "bg-teal-500" },
   { href: "/leads", label: "Leads", resource: "leads", dot: "bg-amber-500" },
   { href: "/estimates", label: "Estimates", resource: "estimates", dot: "bg-lime-500" },

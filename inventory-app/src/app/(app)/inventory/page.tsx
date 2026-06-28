@@ -83,6 +83,14 @@ export default async function InventoryPage({
     getAvgPurchasePriceInr(items.map((i) => i.id)),
   ]);
 
+  // Units committed on open purchase orders (not yet received).
+  const onOrderRows = await prisma.purchaseOrderLine.groupBy({
+    by: ["itemId"],
+    where: { itemId: { in: items.map((i) => i.id) }, purchaseOrder: { status: { in: ["DRAFT", "SENT", "CONFIRMED"] } } },
+    _sum: { quantity: true },
+  });
+  const onOrderMap = new Map(onOrderRows.map((r) => [r.itemId, r._sum.quantity ?? 0]));
+
   const allRows = items
     .map((item) => {
       const summary = summaries.get(item.id);
@@ -219,6 +227,11 @@ export default async function InventoryPage({
                     <TD>{item.category ?? <span className="text-neutral-400">—</span>}</TD>
                     <TD className="text-right tabular-nums">
                       {formatNumber(currentStock)} {item.unit}
+                      {(onOrderMap.get(item.id) ?? 0) > 0 && (
+                        <div className="text-xs text-blue-600 dark:text-blue-400">
+                          +{onOrderMap.get(item.id)} on order
+                        </div>
+                      )}
                     </TD>
                     <TD className="text-right tabular-nums">
                       {item.reorderThreshold > 0 ? formatNumber(item.reorderThreshold) : <span className="text-neutral-400">—</span>}

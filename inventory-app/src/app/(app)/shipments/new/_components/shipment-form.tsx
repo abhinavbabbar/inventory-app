@@ -63,7 +63,22 @@ function previewLines(args: {
   });
 }
 
-export function ShipmentForm({ items, suppliers }: { items: ItemOption[]; suppliers: SupplierOption[] }) {
+type Prefill = {
+  fromPurchaseOrderId: string;
+  poNumber: string;
+  supplierId: string | null;
+  lines: Array<{ itemId: string; quantity: string; unitPurchasePriceInr: string }>;
+};
+
+export function ShipmentForm({
+  items,
+  suppliers,
+  prefill,
+}: {
+  items: ItemOption[];
+  suppliers: SupplierOption[];
+  prefill?: Prefill;
+}) {
   const [state, formAction, pending] = useActionState<ShipmentFormState, FormData>(
     createShipment,
     {},
@@ -75,7 +90,16 @@ export function ShipmentForm({ items, suppliers }: { items: ItemOption[]; suppli
   const [method, setMethod] = useState<ShippingAllocationMethod>("EQUAL_PER_UNIT");
   const [totalShipping, setTotalShipping] = useState("0");
   const [fxRate, setFxRate] = useState("0.0445");
-  const [lines, setLines] = useState<LineState[]>([emptyLine()]);
+  const [lines, setLines] = useState<LineState[]>(
+    prefill?.lines.length
+      ? prefill.lines.map((l) => ({
+          itemId: l.itemId,
+          quantity: l.quantity,
+          unitPurchasePriceInr: l.unitPurchasePriceInr,
+          manualShippingInr: "",
+        }))
+      : [emptyLine()],
+  );
 
   const preview = useMemo(
     () =>
@@ -119,6 +143,16 @@ export function ShipmentForm({ items, suppliers }: { items: ItemOption[]; suppli
       }}
       className="space-y-6"
     >
+      {prefill && (
+        <>
+          <input type="hidden" name="fromPurchaseOrderId" value={prefill.fromPurchaseOrderId} />
+          <div className="rounded-md border border-blue-300 bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-200 px-4 py-2 text-sm">
+            Receiving purchase order <span className="font-medium">{prefill.poNumber}</span>. Adjust quantities, FX and
+            shipping as needed — the PO is marked received when you save.
+          </div>
+        </>
+      )}
+
       {errs.form && (
         <div className="rounded-md border border-red-300 bg-red-50 text-red-800 dark:bg-red-900/20 dark:border-red-700 dark:text-red-200 px-4 py-2 text-sm">
           {errs.form}
@@ -137,7 +171,7 @@ export function ShipmentForm({ items, suppliers }: { items: ItemOption[]; suppli
             <Label htmlFor="supplierId">
               Supplier <span className="text-neutral-400 font-normal">(optional)</span>
             </Label>
-            <Select id="supplierId" name="supplierId" defaultValue="" disabled={suppliers.length === 0}>
+            <Select id="supplierId" name="supplierId" defaultValue={prefill?.supplierId ?? ""} disabled={suppliers.length === 0}>
               <option value="">— No supplier —</option>
               {suppliers.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>

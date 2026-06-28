@@ -98,11 +98,12 @@ model Item {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  shipmentLines  ShipmentLine[]
-  saleLines      SaleLine[]
-  orderLines     OrderLine[]
-  estimateLines  EstimateLine[]
-  stockMovements StockMovement[]
+  shipmentLines      ShipmentLine[]
+  saleLines          SaleLine[]
+  orderLines         OrderLine[]
+  estimateLines      EstimateLine[]
+  purchaseOrderLines PurchaseOrderLine[]
+  stockMovements     StockMovement[]
 
   @@index([sku])
   @@index([category])
@@ -124,8 +125,9 @@ model Supplier {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  shipments Shipment[]
-  payments  SupplierPayment[]
+  shipments      Shipment[]
+  payments       SupplierPayment[]
+  purchaseOrders PurchaseOrder[]
 
   @@index([name])
 }
@@ -163,11 +165,49 @@ model Shipment {
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 
-  supplier Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  lines    ShipmentLine[]
+  supplier         Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  lines            ShipmentLine[]
+  fromPurchaseOrder PurchaseOrder? @relation("POReceived")
 
   @@index([arrivedAt])
   @@index([supplierId])
+}
+
+// A purchase order to a supplier (India side, INR), created before goods
+// arrive. Receiving it pre-fills a Shipment; the PO then links to that shipment.
+model PurchaseOrder {
+  id                 String   @id @default(cuid())
+  poNumber           String   @unique
+  supplierId         String
+  status             String   // DRAFT | SENT | CONFIRMED | RECEIVED | CANCELLED
+  orderedAt          DateTime @default(now())
+  expectedAt         DateTime?
+  notes              String?
+  receivedShipmentId String?  @unique
+  receivedAt         DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  supplier         Supplier            @relation(fields: [supplierId], references: [id])
+  lines            PurchaseOrderLine[]
+  receivedShipment Shipment?           @relation("POReceived", fields: [receivedShipmentId], references: [id])
+
+  @@index([status, orderedAt])
+  @@index([supplierId])
+}
+
+model PurchaseOrderLine {
+  id                   String  @id @default(cuid())
+  purchaseOrderId      String
+  itemId               String
+  quantity             Int
+  unitPurchasePriceInr Decimal
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  item          Item          @relation(fields: [itemId], references: [id])
+
+  @@index([purchaseOrderId])
+  @@index([itemId])
 }
 
 model ShipmentLine {
